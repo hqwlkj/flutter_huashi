@@ -164,6 +164,7 @@ class _HomePageState extends State<HomePage> {
   ///  人脸识别
   ///
   Future<void> faceInfo() async {
+    await FlutterHuashi.closeScanCode; // 先关闭扫码
     await audioCache.play('audios/face.mp3'); // 播报音频
     Map<String, dynamic> result = await FlutterHuashi.initWxFace();
     LogUtil.e(result['code'], tag: 'initWxFace =>  result:');
@@ -181,7 +182,10 @@ class _HomePageState extends State<HomePage> {
             username: authUser.data['real_name']);
       }
     } else {
-      Utils.showToast(result2['message']);
+      Utils.showToast(result2['message']); // 用户取消了也要让用户可以再次刷脸
+      setState(() {
+        _currentBg = 'images/v3/face-repeat-bg.png';
+      });
     }
   }
 
