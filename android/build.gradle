@@ -1,0 +1,65 @@
+group 'com.parsec.flutter_huashi'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.3.50'
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.3.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+        flatDir {
+            dirs project(':flutter_huashi').file('libs') // flutter_huashi
+        }
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 28
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        main.jniLibs.srcDirs +='src/main/jniLibs'
+    }
+    defaultConfig {
+        minSdkVersion 19
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'armeabi'
+        }
+        packagingOptions {
+            pickFirst 'src/main/jniLibs/armeabi-v7a/libHSRAW2BMP.so'
+            pickFirst 'src/main/jniLibs/armeabi-v7a/libserial_port.so'
+            pickFirst 'src/main/jniLibs/armeabi-v7a/libwlt2bmp.so'
+        }
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: [])
+    implementation (name:'wxfacepay-release', ext: 'aar')
+    testImplementation 'junit:junit:4.13.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'com.alibaba:fastjson:1.2.74'
+    implementation 'com.google.code.gson:gson:2.6.2'
+    implementation 'com.squareup.okhttp3:okhttp:3.2.0'
+}
