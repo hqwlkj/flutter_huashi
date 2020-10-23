@@ -86,6 +86,9 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
             "closeScanCode" -> {
                 result.success(closeScanCode())
             }
+            "closeOpenCard" -> {
+                result.success(closeOpenCard())
+            }
             "initWxpayface" -> { // 初始化刷脸支付
                 initWxpayface(result)
             }
@@ -197,6 +200,12 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     private fun closeScanCode(): String {
         Log.i(tag, "closeScanCode")
         CardApi.closeScan()
+        return "SUCCESS"
+    }
+
+    private fun closeOpenCard(): String {
+        Log.i(tag, "closeOpenCard")
+        CardApi.closeOpenCard()
         return "SUCCESS"
     }
 

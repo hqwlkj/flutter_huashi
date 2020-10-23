@@ -134,6 +134,10 @@ public class CardApi {
         CardUtil.closeBox(); //关闭盒子
     }
 
+    public static void closeOpenCard() {
+        CardUtil.closeBox(); //关闭盒子
+    }
+
     /**
      * 打开串口，开启接收线程
      */

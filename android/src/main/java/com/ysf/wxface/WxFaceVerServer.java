@@ -22,6 +22,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -71,6 +72,7 @@ public class WxFaceVerServer {
                 if (map != null) {
                     String code = (String) map.get(WxConstant.RETURN_CODE);
                     String msg = (String) map.get(WxConstant.RETURN_MSG);
+                    Log.i("initWxFacePay:", msg);
                     if (!(code != null && code.equals(WxfacePayCommonCode.VAL_RSP_PARAMS_SUCCESS))) {
                         //初始化失败
                         LoggerUtil.i_file("initWxPayFace 初始化失败");
@@ -99,11 +101,13 @@ public class WxFaceVerServer {
         WxPayFace.getInstance().getWxpayfaceRawdata(new IWxPayfaceCallback() {
             @Override
             public void response(Map map) throws RemoteException {
+                String code = (String) map.get(WxConstant.RETURN_CODE);
+                String msg = (String) map.get(WxConstant.RETURN_MSG);
                 if (!Tools.isSuccessInfo(map)) {
                     LoggerUtil.i_file("rawData获取失败" + "map.get():" + map.get("return_code") + "--msg:" + map.get("return_msg"));
                     FaceResult faceResult = new FaceResult();
                     faceResult.setReturn_msg("rawData获取失败： " + map.get("return_code") + "--msg:" + map.get("return_msg"));
-                    faceResult.setReturn_code("-1");
+                    faceResult.setReturn_code(code);
                     faceResult.setFace_type("1");
                     faceResultToH5(faceResult, callback);
                 } else {
@@ -115,8 +119,8 @@ public class WxFaceVerServer {
                     } else {
                         LoggerUtil.i_file("rawData获取失败");
                         FaceResult faceResult = new FaceResult();
-                        faceResult.setReturn_msg("rawData获取失败");
-                        faceResult.setReturn_code("-1");
+                        faceResult.setReturn_msg(msg);
+                        faceResult.setReturn_code(code);
                         faceResult.setFace_type("1");
                         faceResultToH5(faceResult, callback);
                     }
@@ -177,7 +181,7 @@ public class WxFaceVerServer {
                             LoggerUtil.i("获取人脸凭证失败");
                             FaceResult faceResult = new FaceResult();
                             faceResult.setReturn_msg("获取人脸凭证失败");
-                            faceResult.setFace_code("ERROR");
+                            faceResult.setReturn_code("ERROR");
                             faceResultToH5(faceResult, callback);
                         }
                     } catch (Exception e) {
@@ -185,7 +189,7 @@ public class WxFaceVerServer {
                         LoggerUtil.i("获取人脸凭证失败：" + e.getMessage());
                         FaceResult faceResult = new FaceResult();
                         faceResult.setReturn_msg("获取人脸凭证失败：" + e.getMessage());
-                        faceResult.setFace_code("ERROR");
+                        faceResult.setReturn_code("ERROR");
                         faceResultToH5(faceResult, callback);
                     }
                 }
@@ -211,7 +215,7 @@ public class WxFaceVerServer {
                 LoggerUtil.i(code + "--" + message);
                 FaceResult faceResult = new FaceResult();
                 if (!Tools.isSuccessInfo(map)) {
-                    faceResult.setFace_code("ERROR");
+                    faceResult.setReturn_code("ERROR");
                     if (TextUtils.equals(code, WxfacePayCommonCode.VAL_RSP_PARAMS_USER_CANCEL)) {
                         //用户取消
                         LoggerUtil.e("刷脸失败：用户取消");
@@ -250,28 +254,28 @@ public class WxFaceVerServer {
                                 LoggerUtil.e("刷脸失败：用户取消");
                                 FaceResult faceResult = new FaceResult();
                                 faceResult.setReturn_msg("刷脸失败：用户取消");
-                                faceResult.setFace_code("ERROR");
+                                faceResult.setReturn_code("ERROR");
                                 faceResultToH5(faceResult, callback);
                             } else if (TextUtils.equals(code, WxfacePayCommonCode.VAL_RSP_PARAMS_SCAN_PAYMENT)) {
                                 //扫码支付
                                 LoggerUtil.e("刷脸失败--扫码支付");
                                 FaceResult faceResult = new FaceResult();
                                 faceResult.setReturn_msg("刷脸失败：扫码支付");
-                                faceResult.setFace_code("ERROR");
+                                faceResult.setReturn_code("ERROR");
                                 faceResultToH5(faceResult, callback);
                             } else if (TextUtils.equals(code, "FACEPAY_NOT_AUTH")) {
                                 //无即时支付无权限
                                 LoggerUtil.e("刷脸失败--用户无即时支付无权限");
                                 FaceResult faceResult = new FaceResult();
                                 faceResult.setReturn_msg("刷脸失败：用户无即时支付无权限");
-                                faceResult.setFace_code("ERROR");
+                                faceResult.setReturn_code("ERROR");
                                 faceResultToH5(faceResult, callback);
                             } else {
                                 //失败
                                 LoggerUtil.e("刷脸失败");
                                 FaceResult faceResult = new FaceResult();
                                 faceResult.setReturn_msg("刷脸失败");
-                                faceResult.setFace_code("ERROR");
+                                faceResult.setReturn_code("ERROR");
                                 faceResultToH5(faceResult, callback);
                             }
                         }
