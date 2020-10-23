@@ -55,6 +55,14 @@ Future<String> get closeScanCode async {
   return result;
 }
 
+///
+/// 关闭读卡
+///
+Future<String> get closeOpenCard async {
+  final String result = await _channel.invokeMethod('closeOpenCard');
+  return result;
+}
+
 /// 开启 loading
 Future<void> showPayLoadingDialog() async {
 await _channel.invokeMethod('showPayLoading');
