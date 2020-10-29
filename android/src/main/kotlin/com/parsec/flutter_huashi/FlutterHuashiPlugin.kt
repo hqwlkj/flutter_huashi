@@ -3,7 +3,6 @@ package com.parsec.flutter_huashi
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.Intent.getIntent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -166,7 +165,7 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         Log.i(tag, "initCard")
         try {
             if (CardUtil.setCard()) return "SUCCESS"
-        } catch (e: Exception) {
+        } catch (e: InterruptedException) {
             return "ERROR"
         }
         return "ERROR"
