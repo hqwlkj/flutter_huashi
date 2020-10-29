@@ -18,14 +18,14 @@ public class CardUtil {
     /**
      * 设置读卡
      */
-    public static boolean setCard() {
+    public static boolean setCard() throws InterruptedException {
 
         //关闭扫码盒子电源
         closeBox();
 
         //开启身份证模块电源
         writeFile(gpio, "31");
-
+        Thread.sleep(1000); //1000 毫秒
         //切换到身份证模块
         return writeFile(gpio, "11");
     }
@@ -33,14 +33,14 @@ public class CardUtil {
     /**
      * 设置扫码
      */
-    public static void setScan() {
+    public static void setScan() throws InterruptedException {
 
         //关闭身份证模块电源
         writeFile(gpio, "30");
 
         //开启扫码盒子电源
         writeFile(gpio, "01");
-
+        Thread.sleep(1000); //1000 毫秒
         //切换到扫码盒子
         writeFile(gpio, "10");
     }

@@ -19,7 +19,7 @@ rootProject.allprojects {
         google()
         jcenter()
         flatDir {
-            dirs project(':flutter_huashi').file('libs') // flutter_huashi
+             dirs project(':flutter_huashi').file('libs') // flutter_huashi
         }
     }
 }
