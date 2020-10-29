@@ -238,6 +238,13 @@ public class CardApi {
      */
     private static void closeSerialPort() {
 
+        try {
+            mInputStream.close();
+            mOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         SerialPortUtil.getInstance().closeSerialPort();
         isCard = false;
         mSerialPort = null;
