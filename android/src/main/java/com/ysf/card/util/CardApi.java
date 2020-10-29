@@ -19,6 +19,8 @@ import java.util.Map;
 import android_serialport_api.SerialPort;
 import android_serialport_api.SerialPortUtil;
 
+import static com.ysf.card.util.CardUtil.writeFile;
+
 /**
  * Author:yin.juan
  * Time:2020/10/12 12:38
@@ -52,16 +54,10 @@ public class CardApi {
                         Log.d("CardApi", "证件类型：身份证\n" + "姓名：" + ic.getPeopleName()
                                 + "\n" + "性别：" + ic.getSex() + "\n" + "民族："
                                 + ic.getPeople() + "\n");
-                        //关闭串口
-                        ComApi.close();
-                    } else {
-                        //读卡失败
-                        ComApi.close();
                     }
-                } else {
-                    //认证失败
-                    ComApi.close();
                 }
+                //关闭串口 如果读卡失败、认证失败都直接关闭串口
+                ComApi.close();
             }
 
         } catch (Exception e) {
@@ -79,50 +75,66 @@ public class CardApi {
             final HsSerialPortSDK ComApi = new HsSerialPortSDK(context, "");
             //打开串口
             int openState = ComApi.init("/dev/ttyHS0", 115200, 0);
-            Log.i("打开串口 ==== >openState:", openState+"");
-            if ( openState == 0) {
-                //身份证认证if
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        boolean isAuto = true;
-                        while (isAuto) {
-                            if (ComApi.Authenticate(200) == 0) {
-                                HSIDCardInfo ic = new HSIDCardInfo();
-                                if (ComApi.Read_Card(ic, 2300) == 0) {
-                                    //成功
-                                    Log.d("CardApi", "证件类型：身份证\n" + "姓名：" + ic.getPeopleName()
-                                            + "\n" + "性别：" + ic.getSex() + "\n" + "民族："
-                                            + ic.getPeople() + "\n");
-                                    //关闭串口
-                                    ComApi.close();
-                                    isAuto = false;
-                                    // 处理完业务逻辑，
-                                    Map<String, Object> params = new HashMap<String, Object>();
-                                    params.put("data", FastJsonUtil.toJson(ic));
-                                    params.put("code", "SUCCESS");
-                                    callback.callback(params);
-                                } else {
-                                    //读卡失败
-                                    ComApi.close();
-                                    isAuto = false;
-                                    Map<String, Object> params = new HashMap<String, Object>();
-                                    params.put("code", "ERROR");
-                                    params.put("message", "读卡失败");
-                                    callback.callback(params);
-                                }
-                            }
-                        }
-                    }
-                }).start();
+            Log.i("打开串口 ==== >openState:", openState + "");
+            if (openState != 0) {
+                Log.i("openState:", "哦豁读卡器初始化失败了，我要开始重启了哦，当前状态"+openState + "");
+                // 如果读卡器初始化失败后，重新开启读卡器
+                CardUtil.restartSetCard();
             }
+            readCardInfo(ComApi, callback);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * 读取卡片信息
+     * @param ComApi
+     * @param callback
+     */
+    private static  void readCardInfo(final HsSerialPortSDK ComApi, final ICallback callback){
+        //身份证认证if
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean isAuto = true;
+                while (isAuto) {
+                    if (ComApi.Authenticate(200) == 0) {
+                        HSIDCardInfo ic = new HSIDCardInfo();
+                        if (ComApi.Read_Card(ic, 2300) == 0) {
+                            //成功
+                            Log.d("CardApi", "证件类型：身份证\n" + "姓名：" + ic.getPeopleName()
+                                    + "\n" + "性别：" + ic.getSex() + "\n" + "民族："
+                                    + ic.getPeople() + "\n");
+                            //关闭串口
+                            ComApi.close();
+                            isAuto = false;
+                            // 处理完业务逻辑，
+                            Map<String, Object> params = new HashMap<String, Object>();
+                            params.put("data", FastJsonUtil.toJson(ic));
+                            params.put("code", "SUCCESS");
+                            callback.callback(params);
+                        } else {
+                            //读卡失败
+                            ComApi.close();
+                            isAuto = false;
+                            Map<String, Object> params = new HashMap<String, Object>();
+                            params.put("code", "ERROR");
+                            params.put("message", "读卡失败");
+                            callback.callback(params);
+                        }
+                    }
+                }
+            }
+        }).start();
+    }
 
+    /**
+     * 开启扫码
+     * @param context
+     * @param callback
+     * @throws InterruptedException
+     */
     public static void openScan(Context context, final ICallback callback) throws InterruptedException {
         CardUtil.setScan();
         isCard = true;

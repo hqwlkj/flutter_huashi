@@ -31,6 +31,21 @@ public class CardUtil {
     }
 
     /**
+     * 当初始化读卡器后，重新开始启动读卡器
+     * @return
+     * @throws InterruptedException
+     */
+    public static  boolean restartSetCard() throws InterruptedException {
+        //关闭身份证模块电源
+        writeFile(gpio, "30");
+        //开启身份证模块电源
+        writeFile(gpio, "31");
+        Thread.sleep(1000); //1000 毫秒
+        //切换到身份证模块
+        return writeFile(gpio, "11");
+    }
+
+    /**
      * 设置扫码
      */
     public static void setScan() throws InterruptedException {
