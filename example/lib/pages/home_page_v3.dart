@@ -69,6 +69,8 @@ class _HomePageState extends State<HomePage> {
   /// 按钮切换 功能
   ///
   void handleSwitch(BuildContext context, String type) async {
+    await FlutterHuashi.closeOpenCard;
+    await FlutterHuashi.closeScanCode;
     Loading.showLoading(context, text: '初始化中...');
     switch (type) {
       case 'card':
