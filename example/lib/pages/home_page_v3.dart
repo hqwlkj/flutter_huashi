@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:collection';
-
+import 'package:flutter/material.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter_huashi/flutter_huashi.dart' as FlutterHuashi;
 import 'package:flutter_huashi/flutter_huashi.dart';
@@ -13,13 +13,14 @@ import 'package:flutter_huashi_example/utils/utils.dart';
 import 'package:flutter_huashi_example/widgets/loading.dart';
 
 import 'result_page.dart';
-
+import 'scan_page_v3.dart';
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  StreamSubscription<Map> _flutterHuashi;
   // 音频播放
   AudioCache audioCache = AudioCache(prefix: '', fixedPlayer: AudioPlayer());
   String _type = 'card'; // card、scan、face
@@ -39,11 +40,7 @@ class _HomePageState extends State<HomePage> {
     ];
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       LogUtil.e('addPostFrameCallback', tag: 'addPostFrameCallback');
-      if (_type == 'scan') {
-        scanCodeInfo();
-      } else {
-        readCardInfo();
-      }
+      readCardInfo();
     });
   }
 
@@ -58,9 +55,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    if (_type == 'scan') {
-      FlutterHuashi.closeScanCode;
-    }
+    _flutterHuashi?.cancel();
+    audioCache.disableLog();
+    audioCache.clearCache();
+    FlutterHuashi.closeOpenCard;
     LogUtil.e('object', tag: 'dispose');
     super.dispose();
   }
@@ -88,18 +86,11 @@ class _HomePageState extends State<HomePage> {
         });
         break;
       case 'scan':
-        setState(() {
-          _type = type;
-          _currentBg = 'images/v3/scan-code-bg.png';
-          _currentBtn = [
-            {"type": 'card', "url": 'images/v3/read-card-btn.png'},
-            {"type": 'face', "url": 'images/v3/face-btn.png'}
-          ];
-        });
-        Future.delayed(Duration(milliseconds: 1000), () {
-          scanCodeInfo();
-          Loading.hideLoading(context);
-        });
+        // 跳扫码
+        Navigator.push(
+            context,
+            new MaterialPageRoute(
+                builder: (context) => new ScanPage()));
         break;
       case 'face':
         setState(() {
@@ -129,7 +120,7 @@ class _HomePageState extends State<HomePage> {
       Map<String, dynamic> map = await FlutterHuashi.openAutoCard;
       if (map['code'] == 'SUCCESS') {
         CardInfoModel model =
-            JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
+        JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
         print('peopleName:${model.peopleName}');
         print('iDCard:${model.iDCard}');
         checkHealth(context, _type, model.iDCard, username: model.peopleName);
@@ -155,7 +146,7 @@ class _HomePageState extends State<HomePage> {
       }
       LogUtil.e(result['data'], tag: 'result=>2:');
       Map<String, dynamic> resultMap =
-          JsonUtil.getObject(result['data'], (v) => Map.of(v));
+      JsonUtil.getObject(result['data'], (v) => Map.of(v));
       checkHealth(context, _type, resultMap['codeId'], json: result['data']);
     } else {
       Utils.showToast(result['messages'] ?? '渝康码识别失败，请稍后重试...');
@@ -175,9 +166,9 @@ class _HomePageState extends State<HomePage> {
     Loading.hideLoading(context);
     if (result2['code'] == 'SUCCESS') {
       Map<String, dynamic> resultMap =
-          JsonUtil.getObject(result2['data'], (v) => Map.of(v));
+      JsonUtil.getObject(result2['data'], (v) => Map.of(v));
       Response authUser =
-          await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
+      await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
       LogUtil.e(authUser, tag: 'authUser');
       if (authUser.statusCode == 200) {
         checkHealth(context, 'face', authUser.data['credential_no'],
