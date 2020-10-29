@@ -77,7 +77,7 @@ public class CardApi {
             int openState = ComApi.init("/dev/ttyHS0", 115200, 0);
             Log.i("打开串口 ==== >openState:", openState + "");
             if (openState != 0) {
-                Log.i("openState:", "哦豁读卡器初始化失败了，我要开始重启了哦，当前状态"+openState + "");
+                Log.i("openState:", "哦豁读卡器初始化失败了，我要开始重启了哦，当前状态" + openState + "");
                 // 如果读卡器初始化失败后，重新开启读卡器
                 CardUtil.restartSetCard();
             }
@@ -89,10 +89,11 @@ public class CardApi {
 
     /**
      * 读取卡片信息
+     *
      * @param ComApi
      * @param callback
      */
-    private static  void readCardInfo(final HsSerialPortSDK ComApi, final ICallback callback){
+    private static void readCardInfo(final HsSerialPortSDK ComApi, final ICallback callback) {
         //身份证认证if
         new Thread(new Runnable() {
             @Override
@@ -131,6 +132,7 @@ public class CardApi {
 
     /**
      * 开启扫码
+     *
      * @param context
      * @param callback
      * @throws InterruptedException
@@ -147,10 +149,10 @@ public class CardApi {
         CardUtil.closeBox(); //关闭盒子
     }
 
-    public static void closeStream(){
+    public static void closeStream() {
         try {
-            mInputStream.close();
-            mOutputStream.close();
+            if (mInputStream != null) mInputStream.close();
+            if (mOutputStream != null) mOutputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
