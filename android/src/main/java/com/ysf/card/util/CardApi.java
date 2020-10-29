@@ -147,6 +147,15 @@ public class CardApi {
         CardUtil.closeBox(); //关闭盒子
     }
 
+    public static void closeStream(){
+        try {
+            mInputStream.close();
+            mOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void closeOpenCard() {
         CardUtil.closeBox(); //关闭盒子
     }
@@ -237,14 +246,6 @@ public class CardApi {
      * 关闭串口，停掉接收线程
      */
     private static void closeSerialPort() {
-
-        try {
-            mInputStream.close();
-            mOutputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         SerialPortUtil.getInstance().closeSerialPort();
         isCard = false;
         mSerialPort = null;

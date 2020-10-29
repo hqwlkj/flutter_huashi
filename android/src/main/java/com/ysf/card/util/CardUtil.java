@@ -20,8 +20,8 @@ public class CardUtil {
      */
     public static boolean setCard() throws InterruptedException {
 
-        // 20201029切换到读卡器的时候先关闭扫码的数据流及串口
-        CardApi.closeScan();
+        // 20201029切换到读卡器的时候先关闭扫码的数据流
+        CardApi.closeStream();
 
         //关闭扫码盒子电源
         closeBox();
