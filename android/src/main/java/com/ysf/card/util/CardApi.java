@@ -123,11 +123,10 @@ public class CardApi {
     }
 
 
-    public static void openScan(Context context, final ICallback callback) {
+    public static void openScan(Context context, final ICallback callback) throws InterruptedException {
         CardUtil.setScan();
         isCard = true;
         openSerialPort(callback);
-
     }
 
     public static void closeScan() {
