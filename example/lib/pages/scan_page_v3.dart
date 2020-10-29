@@ -72,7 +72,7 @@ class _HomePageState extends State<ScanPage> {
     switch (type) {
       case 'card':
          //跳身份证
-        Navigator.push(
+        Navigator.pushReplacement(
             context,
             new MaterialPageRoute(
                 builder: (context) => new HomePage()));

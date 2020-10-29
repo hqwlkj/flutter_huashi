@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
         break;
       case 'scan':
         // 跳扫码
-        Navigator.push(
+        Navigator.pushReplacement(
             context,
             new MaterialPageRoute(
                 builder: (context) => new ScanPage()));
