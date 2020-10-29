@@ -144,8 +144,8 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         })
     }
 
-    private fun wxFacePay(@NonNull result: Result){
-        WxFaceUtil.FacePay(HuaShiHandler.getContext(), "", object: ICallback{
+    private fun wxFacePay(@NonNull result: Result) {
+        WxFaceUtil.FacePay(HuaShiHandler.getContext(), "", object : ICallback {
             override fun callback(params: MutableMap<String, Any>?) {
                 uiThreadHandler.post {
                     result.success(params)
@@ -157,15 +157,18 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     /**
      * 释放微信刷脸
      */
-    private fun releaseWxpayface(){
+    private fun releaseWxpayface() {
         WxFaceUtil.releaseWxpayface(HuaShiHandler.getContext())
     }
 
 
     private fun initCard(): String {
         Log.i(tag, "initCard")
-        if (CardUtil.setCard())
-            return "SUCCESS"
+        try {
+            if (CardUtil.setCard()) return "SUCCESS"
+        } catch (e: Exception) {
+            return "ERROR"
+        }
         return "ERROR"
     }
 

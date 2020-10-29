@@ -78,7 +78,9 @@ public class CardApi {
         try {
             final HsSerialPortSDK ComApi = new HsSerialPortSDK(context, "");
             //打开串口
-            if (ComApi.init("/dev/ttyHS0", 115200, 0) == 0) {
+            int openState = ComApi.init("/dev/ttyHS0", 115200, 0);
+            Log.i("打开串口 ==== >openState:", openState+"");
+            if ( openState == 0) {
                 //身份证认证if
 
                 new Thread(new Runnable() {
