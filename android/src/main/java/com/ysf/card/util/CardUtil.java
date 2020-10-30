@@ -1,5 +1,6 @@
 package com.ysf.card.util;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.io.File;
@@ -18,17 +19,18 @@ public class CardUtil {
     /**
      * 设置读卡
      */
-    public static boolean setCard() throws InterruptedException {
+    public static boolean setCard() {
 
         // 20201029切换到读卡器的时候先关闭扫码的数据流
-        CardApi.closeStream();
+//        CardApi.closeStream();
 
         //关闭扫码盒子电源
         closeBox();
 
         //开启身份证模块电源
         writeFile(gpio, "31");
-        Thread.sleep(1000); //1000 毫秒
+//        Thread.sleep(1000); //1000 毫秒
+        SystemClock.sleep(1000);
         //切换到身份证模块
         return writeFile(gpio, "11");
     }
@@ -36,14 +38,13 @@ public class CardUtil {
     /**
      * 当初始化读卡器后，重新开始启动读卡器
      * @return
-     * @throws InterruptedException
      */
-    public static  boolean restartSetCard() throws InterruptedException {
+    public static  boolean restartSetCard()  {
         //关闭身份证模块电源
         writeFile(gpio, "30");
         //开启身份证模块电源
         writeFile(gpio, "31");
-        Thread.sleep(1000); //1000 毫秒
+        SystemClock.sleep(1000);
         //切换到身份证模块
         return writeFile(gpio, "11");
     }
@@ -51,14 +52,14 @@ public class CardUtil {
     /**
      * 设置扫码
      */
-    public static void setScan() throws InterruptedException {
+    public static void setScan() {
 
         //关闭身份证模块电源
         writeFile(gpio, "30");
 
         //开启扫码盒子电源
         writeFile(gpio, "01");
-        Thread.sleep(1000); //1000 毫秒
+        SystemClock.sleep(1000);
         //切换到扫码盒子
         writeFile(gpio, "10");
     }

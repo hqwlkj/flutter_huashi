@@ -135,9 +135,8 @@ public class CardApi {
      *
      * @param context
      * @param callback
-     * @throws InterruptedException
      */
-    public static void openScan(Context context, final ICallback callback) throws InterruptedException {
+    public static void openScan(Context context, final ICallback callback) {
         CardUtil.setScan();
         isCard = true;
         openSerialPort(callback);
@@ -149,6 +148,9 @@ public class CardApi {
         CardUtil.closeBox(); //关闭盒子
     }
 
+    /**
+     * 关闭数据流
+     */
     public static void closeStream() {
         try {
             if (mInputStream != null) mInputStream.close();
