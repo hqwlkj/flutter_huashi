@@ -3,7 +3,6 @@ package com.parsec.flutter_huashi.handlers
 import android.content.Context
 import android.util.Log
 import com.tencent.wxpayface.WxfacePayLoadingDialog
-import com.ysf.card.CardServer
 import io.flutter.plugin.common.MethodChannel
 
 object HuaShiHandler {
@@ -33,12 +32,4 @@ object HuaShiHandler {
     fun hideDialog(){
         wxfacePayLoadingDialog.hide()
     }
-
-    fun handleResponse(response: CardServer) {
-        Log.i("handleResponse", response.toString())
-        when (response) {
-
-        }
-    }
-
 }
