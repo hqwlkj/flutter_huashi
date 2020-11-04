@@ -14,6 +14,9 @@ import java.io.IOException;
  * Description:[切换盒子和读卡工具类]
  */
 public class CardUtil {
+
+    //身份证模块 开启：拉高gpio_89,拉高gpio_23 关闭：拉低gpio_89   输入 "11"
+    //扫码盒子：开启：拉高gpio_22，拉低gpio_23 关闭：拉低gpio_22   输入 "10"
     private static final String gpio = "/sys/devices/platform/soc/7af0000.uart/gpio";
 
     /**
@@ -25,14 +28,18 @@ public class CardUtil {
 //        CardApi.closeStream();
 
         //关闭扫码盒子电源
-        closeBox();
+//        closeBox();
 
         //开启身份证模块电源
-        writeFile(gpio, "31");
+//        writeFile(gpio, "31");
 //        Thread.sleep(1000); //1000 毫秒
-        SystemClock.sleep(1000);
+//        SystemClock.sleep(1000);
         //切换到身份证模块
-        return writeFile(gpio, "11");
+        boolean boo = writeFile(gpio, "11");
+        SystemClock.sleep(100);
+        String data = readFileData(gpio);
+        Log.i("setCard", data);
+        return  boo;
     }
 
     /**
@@ -41,12 +48,16 @@ public class CardUtil {
      */
     public static  boolean restartSetCard()  {
         //关闭身份证模块电源
-        writeFile(gpio, "30");
+//        writeFile(gpio, "30");
         //开启身份证模块电源
-        writeFile(gpio, "31");
-        SystemClock.sleep(1000);
+//        writeFile(gpio, "31");
+//        SystemClock.sleep(1000);
         //切换到身份证模块
-        return writeFile(gpio, "11");
+        boolean boo = writeFile(gpio, "11");
+        SystemClock.sleep(100);
+        String data = readFileData(gpio);
+        Log.i("restartSetCard", data);
+        return  boo;
     }
 
     /**
@@ -55,13 +66,15 @@ public class CardUtil {
     public static void setScan() {
 
         //关闭身份证模块电源
-        writeFile(gpio, "30");
+//        writeFile(gpio, "30");
 
         //开启扫码盒子电源
-        writeFile(gpio, "01");
-        SystemClock.sleep(1000);
+//        writeFile(gpio, "01");
         //切换到扫码盒子
         writeFile(gpio, "10");
+        SystemClock.sleep(100);
+        String data = readFileData(gpio);
+        Log.i("setScan", data);
     }
 
     /**
@@ -71,27 +84,6 @@ public class CardUtil {
     public static boolean closeBox(){
         //关闭扫码盒子电源
         return writeFile(gpio, "00");
-    }
-
-    /*
-     *   读取节点值
-     */
-    public String readFileData(String fileName) {
-        String result = "";
-        try {
-            File updatefile = new File(fileName);
-            FileInputStream fis = new FileInputStream(fileName);
-            // 获取文件长度
-            int lenght = fis.available();
-            byte[] buffer = new byte[lenght];
-            fis.read(buffer);
-
-            // 将byte数组转换成指定格式的字符串
-            result = new String(buffer, "UTF-8");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return result;
     }
 
     public static boolean writeFile(String filePath, String content) {
@@ -109,5 +101,27 @@ public class CardUtil {
         }
         Log.d("zml", "writeFile   " + filePath + "   value   " + content);
         return res;
+    }
+
+    /**
+     * 读取节点值
+     * @param fileName
+     * @return
+     */
+    public static String readFileData(String fileName) {
+        String result = "";
+        try {
+            File updatefile = new File(fileName);
+            FileInputStream fis = new FileInputStream(fileName);
+            // 获取文件长度
+            int lenght = fis.available();
+            byte[] buffer = new byte[lenght];
+            fis.read(buffer);
+            // 将byte数组转换成指定格式的字符串
+            result = new String(buffer, "UTF-8");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }

@@ -2,6 +2,7 @@ package com.ysf.card.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.huashi.otg.sdk.HSIDCardInfo;
@@ -9,6 +10,8 @@ import com.huashi.otg.sdk.HsSerialPortSDK;
 import com.ysf.card.CardServer;
 import com.ysf.card.entry.CardInfo;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,7 +46,7 @@ public class CardApi {
     public static void openCard(Context context) {
         try {
             HsSerialPortSDK ComApi = new HsSerialPortSDK(context, "");
-            //打开串口
+            //2762D9
             if (ComApi.init("/dev/ttyHS0", 115200, 0) == 0) {
                 //身份证认证
                 if (ComApi.Authenticate(1000) == 0) {
@@ -81,6 +84,7 @@ public class CardApi {
                 // 如果读卡器初始化失败后，重新开启读卡器
                 CardUtil.restartSetCard();
             }
+            SystemClock.sleep(1000);
             readCardInfo(ComApi, callback);
         } catch (Exception e) {
             e.printStackTrace();
@@ -143,9 +147,9 @@ public class CardApi {
     }
 
     public static void closeScan() {
+        CardUtil.closeBox(); //关闭盒子
         //关闭扫码串口
         closeSerialPort();
-        CardUtil.closeBox(); //关闭盒子
     }
 
     /**
@@ -183,47 +187,35 @@ public class CardApi {
                             int size;
                             try {
                                 if (mInputStream == null) return;
-                                try {
+                                byte[] buffer = new byte[1];
+                                size = mInputStream.read(buffer);
 
-                                    byte[] buffer = new byte[1];
-                                    size = mInputStream.read(buffer);
+                                if (size > 0) {
+                                    byte[] buffer2 = new byte[1023];
+                                    size = mInputStream.read(buffer2);
+                                    byteReadList.add(buffer);
+                                    byteReadList.add(buffer2);
+                                    byte[] data = DigitalTrans.copyByte(byteReadList);
+                                    byteReadList.clear();
 
-                                    if (size > 0) {
-                                        Thread.sleep(50);
-                                        byte[] buffer2 = new byte[1023];
-                                        size = mInputStream.read(buffer2);
-                                        byteReadList.add(buffer);
-                                        byteReadList.add(buffer2);
-                                        byte[] data = DigitalTrans.copyByte(byteReadList);
-                                        byteReadList.clear();
-
-                                        byte[] dataByteArray = new byte[Math.abs(size)];
-                                        System.arraycopy(data, 0, dataByteArray, 0, Math.abs(size));
-                                        String scanString;
-                                        if (dataByteArray[0] == 0) {
-                                            byte[] dat = new byte[Math.abs(size) - 1];
-                                            System.arraycopy(dataByteArray, 1, dat, 0, Math.abs(size) - 1);
-                                            scanString = new String(dat);
-                                        } else {
-                                            scanString = new String(dataByteArray);
-                                        }
-                                        Log.d("ReadThread", scanString);
-
-                                        closeSerialPort();
-                                        Map<String, Object> params = new HashMap<String, Object>();
-                                        params.put("code", "SUCCESS");
-                                        params.put("data", scanString);
-                                        callback.callback(params);
+                                    byte[] dataByteArray = new byte[Math.abs(size)];
+                                    System.arraycopy(data, 0, dataByteArray, 0, Math.abs(size));
+                                    String scanString;
+                                    if (dataByteArray[0] == 0) {
+                                        byte[] dat = new byte[Math.abs(size) - 1];
+                                        System.arraycopy(dataByteArray, 1, dat, 0, Math.abs(size) - 1);
+                                        scanString = new String(dat);
+                                    } else {
+                                        scanString = new String(dataByteArray);
                                     }
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                                    Log.d("ReadThread", scanString);
+
+                                    closeSerialPort();
                                     Map<String, Object> params = new HashMap<String, Object>();
-                                    params.put("code", "ERROR");
-                                    params.put("data", "");
-                                    params.put("message", e.getMessage());
+                                    params.put("code", "SUCCESS");
+                                    params.put("data", scanString);
                                     callback.callback(params);
                                 }
-
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 Map<String, Object> params = new HashMap<String, Object>();
@@ -258,6 +250,28 @@ public class CardApi {
 
         //  LoggerUtil.i_file("关闭串口 :closeSerialPort()");
 
+    }
+
+    /**
+     * 读取节点值
+     * @param fileName
+     * @return
+     */
+    public static String readFileData(String fileName) {
+        String result = "";
+        try {
+            File updatefile = new File(fileName);
+            FileInputStream fis = new FileInputStream(fileName);
+            // 获取文件长度
+            int lenght = fis.available();
+            byte[] buffer = new byte[lenght];
+            fis.read(buffer);
+            // 将byte数组转换成指定格式的字符串
+            result = new String(buffer, "UTF-8");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
 }

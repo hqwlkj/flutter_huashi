@@ -7,9 +7,12 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.NonNull
+import com.huashi.otg.sdk.HSIDCardInfo
 import com.parsec.flutter_huashi.handlers.HuaShiHandler
-import com.ysf.card.util.CardApi
-import com.ysf.card.util.CardUtil
+import com.urovo.xbsdk.Function
+import com.urovo.xbsdk.IDCardReadCallBack
+import com.urovo.xbsdk.ScanCallBack
+import com.ysf.card.util.FastJsonUtil
 import com.ysf.card.util.ICallback
 import com.ysf.wxface.utils.WxFaceUtil
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -70,24 +73,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
             "getPlatformVersion" -> {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             }
-            "initCard" -> {
-                result.success(initCard())
-            }
-            "openCard" -> {
-                result.success(openCard())
-            }
-            "openAutoCard" -> {
-                openAutoCard(result)
-            }
-            "scanCode" -> {
-                openScan(result)
-            }
-            "closeScanCode" -> {
-                result.success(closeScanCode())
-            }
-            "closeOpenCard" -> {
-                result.success(closeOpenCard())
-            }
             "initWxpayface" -> { // 初始化刷脸支付
                 initWxpayface(result)
             }
@@ -106,10 +91,88 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
             "hidePayLoading" -> {
                 hideDialog()
             }
+            "openCardInfo" -> {
+                openCard(result)
+            }
+            "openScanCode" -> {
+                openScanCode(result)
+            }
+            "stopScanCode" -> {
+                stopScanCode(result)
+            }
+            "stopReadCard" -> {
+                stopReadCard(result)
+            }
             else -> {
                 result.notImplemented()
             }
         }
+    }
+
+
+    private fun openCard(@NonNull result: Result) {
+        Function.doReadIDCard(HuaShiHandler.getContext(), object : IDCardReadCallBack {
+            override fun success(ic: HSIDCardInfo?) {
+                uiThreadHandler.post {
+                    val params: MutableMap<String, Any> = HashMap()
+                    params["data"] = FastJsonUtil.toJson(ic)
+                    params["code"] = "SUCCESS"
+                    Log.e("HUASHI-CARD",  """
+     证件类型：身份证
+     姓名：${ic!!.peopleName}
+     性别：${ic.sex}
+     民族：${ic.people}
+     """.trimIndent())
+                    result.success(params)
+                }
+            }
+
+            override fun fail(code: Int, message: String?) {
+                Log.e("HUASHI-CARD", code.toString())
+                Log.e("HUASHI-CARD", message.toString())
+                // 失败了先不处理异常信息
+//            uiThreadHandler.post {
+//                result.error(code.toString(), message.toString(), null)
+//            }
+            }
+        })
+    }
+
+    private fun openScanCode(@NonNull result: Result) {
+        Function.doScanLoop(object : ScanCallBack {
+            override fun success(data: String?) {
+                Function.stopScan() // 停止扫码
+                uiThreadHandler.post {
+                    val params: MutableMap<String, Any> = HashMap()
+                    params["data"] = data.toString()
+                    params["code"] = "SUCCESS"
+                    result.success(params)
+                }
+            }
+
+            override fun fail(code: Int, message: String?) {
+                uiThreadHandler.post {
+                    Log.e("HUASHI-CARD", code.toString())
+                    Log.e("HUASHI-CARD", message.toString())
+//                    val params: MutableMap<String, Any> = HashMap()
+//                    params["code"] = "ERROR"
+//                    params["resultCode"] = code
+//                    params["message"] = message.toString()
+//                    result.success(params)
+                }
+            }
+        })
+    }
+
+
+    private fun stopScanCode(@NonNull result: Result){
+        Function.stopScan()
+        result.success("SUCCESS")
+    }
+
+    private fun stopReadCard(@NonNull result: Result){
+        Function.stopReadIDCard()
+        result.success("SUCCESS")
     }
 
     private fun showDialog() {
@@ -158,61 +221,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
      */
     private fun releaseWxpayface() {
         WxFaceUtil.releaseWxpayface(HuaShiHandler.getContext())
-    }
-
-
-    private fun initCard(): String {
-        Log.i(tag, "initCard")
-        try {
-            if (CardUtil.setCard()) return "SUCCESS"
-        } catch (e: InterruptedException) {
-            return "ERROR"
-        }
-        return "ERROR"
-    }
-
-    private fun openCard(): String {
-        Log.i(tag, "openCard")
-        CardApi.openCard(HuaShiHandler.getContext())
-        return "SUCCESS"
-    }
-
-    private fun openAutoCard(@NonNull result: Result) {
-        Log.i(tag, "openAutoCard")
-        CardApi.openAutoCard(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    private fun openScan(@NonNull result: Result) {
-        Log.i(tag, "openScan")
-        CardApi.openScan(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    private fun closeScanCode(): String {
-        Log.i(tag, "closeScanCode")
-        CardApi.closeScan()
-        return "SUCCESS"
-    }
-
-    private fun closeOpenCard(): String {
-        Log.i(tag, "closeOpenCard")
-        CardApi.closeOpenCard()
-        return "SUCCESS"
-    }
-
-    fun sendMessage() {
-
     }
 
     //广播接收者

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -11,9 +10,8 @@ import 'package:flutter_huashi_example/services/home_service.dart';
 import 'package:flutter_huashi_example/utils/net_utils.dart';
 import 'package:flutter_huashi_example/utils/utils.dart';
 import 'package:flutter_huashi_example/widgets/loading.dart';
-
 import 'result_page.dart';
-import 'scan_page_v3.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -58,8 +56,9 @@ class _HomePageState extends State<HomePage> {
     _flutterHuashi?.cancel();
     audioCache.disableLog();
     audioCache.clearCache();
-    FlutterHuashi.closeOpenCard;
-    LogUtil.e('object', tag: 'dispose');
+    FlutterHuashi.stopReadCard;
+    FlutterHuashi.stopScanCode;
+    LogUtil.e('dispose', tag: 'dispose');
     super.dispose();
   }
 
@@ -67,8 +66,6 @@ class _HomePageState extends State<HomePage> {
   /// 按钮切换 功能
   ///
   void handleSwitch(BuildContext context, String type) async {
-    await FlutterHuashi.closeOpenCard;
-    await FlutterHuashi.closeScanCode;
     Loading.showLoading(context, text: '初始化中...');
     switch (type) {
       case 'card':
@@ -86,11 +83,18 @@ class _HomePageState extends State<HomePage> {
         });
         break;
       case 'scan':
-        // 跳扫码
-        Navigator.pushReplacement(
-            context,
-            new MaterialPageRoute(
-                builder: (context) => new ScanPage()));
+        setState(() {
+          _type = type;
+          _currentBg = 'images/v3/scan-code-bg.png';
+          _currentBtn = [
+            {"type": 'card', "url": 'images/v3/read-card-btn.png'},
+            {"type": 'face', "url": 'images/v3/face-btn.png'}
+          ];
+        });
+        Future.delayed(Duration(milliseconds: 1000), () {
+          scanCodeInfo();
+          Loading.hideLoading(context);
+        });
         break;
       case 'face':
         setState(() {
@@ -114,20 +118,17 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> readCardInfo() async {
     await audioCache.play('audios/read-card.mp3'); // 播报音频
-    String result = await FlutterHuashi.initCard;
-    print('82:result: $result');
-    if (result == 'SUCCESS') {
-      Map<String, dynamic> map = await FlutterHuashi.openAutoCard;
-      if (map['code'] == 'SUCCESS') {
-        CardInfoModel model =
-        JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
-        print('peopleName:${model.peopleName}');
-        print('iDCard:${model.iDCard}');
-        checkHealth(context, _type, model.iDCard, username: model.peopleName);
-      } else {
-        Utils.showToast('身份证读取失败，请稍后重试...');
-        readCardInfo();
-      }
+    Map<String, dynamic> map = await FlutterHuashi.openCardInfo();
+    LogUtil.e(map);
+    if (map['code'] == 'SUCCESS') {
+      CardInfoModel model =
+      JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
+      print('peopleName:${model.peopleName}');
+      print('iDCard:${model.iDCard}');
+      checkHealth(context, _type, model.iDCard, username: model.peopleName);
+    } else {
+      Utils.showToast('身份证读取失败，请稍后重试...');
+      readCardInfo();
     }
   }
 
@@ -136,9 +137,8 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> scanCodeInfo() async {
     await audioCache.play('audios/scan-code.mp3'); // 播报音频
-    Map<String, dynamic> result = await FlutterHuashi.scanCode;
+    Map<String, dynamic> result = await FlutterHuashi.openScanCode();
     print('100:result: $result');
-    await FlutterHuashi.closeScanCode;
     if (result['code'] == 'SUCCESS') {
       LogUtil.e(result['data'], tag: 'result=>1:');
       if(result['data'].toString().indexOf("{{") > -1){
@@ -157,12 +157,12 @@ class _HomePageState extends State<HomePage> {
   ///  人脸识别
   ///
   Future<void> faceInfo() async {
-    await FlutterHuashi.closeScanCode; // 先关闭扫码
+    await FlutterHuashi.stopScanCode; // 先停止扫码
+    await FlutterHuashi.stopReadCard; // 先停止读卡
     await audioCache.play('audios/face.mp3'); // 播报音频
     Map<String, dynamic> result = await FlutterHuashi.initWxFace();
     LogUtil.e(result['code'], tag: 'initWxFace =>  result:');
     Map<String, dynamic> result2 = await FlutterHuashi.wxFaceVerify();
-    LogUtil.e(result2, tag: 'wxFaceVerify =>  result:');
     Loading.hideLoading(context);
     if (result2['code'] == 'SUCCESS') {
       Map<String, dynamic> resultMap =

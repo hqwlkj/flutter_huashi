@@ -91,6 +91,27 @@ Future<Map<String, dynamic>> wxFacePay() async {
   return result;
 }
 
+/// 开启扫码
+Future<Map<String, dynamic>> openScanCode() async {
+  final Map<String, dynamic> result = await _channel.invokeMapMethod('openScanCode');
+  return result;
+}
+
+/// 停止扫码
+Future<String> get stopScanCode async{
+  return await _channel.invokeMethod("stopScanCode");
+}
+
+/// 停止读卡
+Future<String> get stopReadCard async{
+  return await _channel.invokeMethod("stopReadCard");
+}
+/// 新的开始读卡
+Future<Map<String, dynamic>> openCardInfo() async {
+  final Map<String, dynamic> result = await _channel.invokeMapMethod('openCardInfo');
+  return result;
+}
+
 Future _methodHandler(MethodCall methodCall){
   // var response = BaseWeChatResponse.create(methodCall.method, methodCall.arguments);
   print('_methodHandler');
