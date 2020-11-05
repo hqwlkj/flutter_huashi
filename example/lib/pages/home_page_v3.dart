@@ -105,7 +105,8 @@ class _HomePageState extends State<HomePage> {
             {"type": 'scan', "url": 'images/v3/scan-code-right-btn.png'}
           ];
         });
-        faceInfo();
+        Loading.hideLoading(context);
+        faceInfo(context);
         break;
       default:
         Utils.showToast('别点了，没有你想去的地方');
@@ -156,17 +157,19 @@ class _HomePageState extends State<HomePage> {
   ///
   ///  人脸识别
   ///
-  Future<void> faceInfo() async {
+  Future<void> faceInfo(BuildContext context) async {
+    await audioCache.play('audios/face.mp3'); // 播报音频
     await FlutterHuashi.stopScanCode; // 先停止扫码
     await FlutterHuashi.stopReadCard; // 先停止读卡
-    await audioCache.play('audios/face.mp3'); // 播报音频
     Map<String, dynamic> result = await FlutterHuashi.initWxFace();
     LogUtil.e(result['code'], tag: 'initWxFace =>  result:');
     Map<String, dynamic> result2 = await FlutterHuashi.wxFaceVerify();
-    Loading.hideLoading(context);
+    Loading.showLoading(context, text: '认证中,请稍候...' ,fontSize: 12);
     if (result2['code'] == 'SUCCESS') {
+      LogUtil.e(new DateTime.now(), tag: '=======begin=======');
       Map<String, dynamic> resultMap =
       JsonUtil.getObject(result2['data'], (v) => Map.of(v));
+      LogUtil.e(new DateTime.now(), tag: '=======end=======');
       Response authUser =
       await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
       LogUtil.e(authUser, tag: 'authUser');
@@ -249,7 +252,7 @@ class _HomePageState extends State<HomePage> {
               child: InkWell(
                 onTap: (){
                   if(_type == 'face'){
-                    faceInfo();
+                    faceInfo(context);
                   }
                 },
                 child: Image.asset(_currentBg, width: 390.0),

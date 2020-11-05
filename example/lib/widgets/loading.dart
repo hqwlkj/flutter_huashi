@@ -7,7 +7,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 class Loading {
   static bool isLoading = false;
 
-  static void showLoading(BuildContext context,{String text}) {
+  static void showLoading(BuildContext context,{String text, double fontSize=14}) {
     if (!isLoading) {
       isLoading = true;
       showGeneralDialog(
@@ -34,7 +34,7 @@ class Loading {
                         size: 40,
                       ),
                       VEmptyView(15),
-                      Text(text, style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w200, decoration: TextDecoration.none ),)
+                      Text(text, style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: FontWeight.w200, decoration: TextDecoration.none ),)
                     ],
                   ) :SpinKitCircle(
                       color: Colors.white,
