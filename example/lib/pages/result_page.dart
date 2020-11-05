@@ -72,6 +72,16 @@ class _ResultPageState extends State<ResultPage> {
     super.dispose();
   }
 
+  String _getPageTitle(){
+    if(widget.type == 'card'){
+      return '身份证认证';
+    }else if(widget.type == 'scan'){
+      return '渝康码认证';
+    }else{
+      return '人脸识别认证';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Color _globalColor =
@@ -80,7 +90,7 @@ class _ResultPageState extends State<ResultPage> {
     return Scaffold(
       backgroundColor: _globalColor,
       appBar: AppBar(
-          title: Text(widget.type == 'card' ? '识别身份证' : '识别渝康码'),
+          title: Text(_getPageTitle()),
           elevation: 0,
           actions: [
             FlatButton(
