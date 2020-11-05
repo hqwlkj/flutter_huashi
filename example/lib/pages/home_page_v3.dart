@@ -138,6 +138,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> scanCodeInfo(BuildContext context) async {
     await audioCache.play('audios/scan-code.mp3'); // 播报音频
     Map<String, dynamic> result = await FlutterHuashi.openScanCode();
+    LogUtil.e(result, tag: 'openScanCode:');
     if (result['code'] == 'SUCCESS') {
       LogUtil.e(result['data'], tag: 'result=>1:');
       if(result['data'].toString().indexOf('codeId') < 0){
@@ -154,6 +155,7 @@ class _HomePageState extends State<HomePage> {
       }
     } else {
       Utils.showToast(result['messages'] ?? '渝康码识别失败，请稍后重试...');
+      scanCodeInfo(context);
     }
   }
 

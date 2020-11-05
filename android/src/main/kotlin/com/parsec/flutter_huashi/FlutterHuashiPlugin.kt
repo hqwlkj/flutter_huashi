@@ -154,11 +154,11 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
                 uiThreadHandler.post {
                     Log.e("HUASHI-CARD", code.toString())
                     Log.e("HUASHI-CARD", message.toString())
-//                    val params: MutableMap<String, Any> = HashMap()
-//                    params["code"] = "ERROR"
-//                    params["resultCode"] = code
-//                    params["message"] = message.toString()
-//                    result.success(params)
+                    val params: MutableMap<String, Any> = HashMap()
+                    params["code"] = "ERROR"
+                    params["resultCode"] = code
+                    params["message"] = message.toString()
+                    result.success(params)
                 }
             }
         })
