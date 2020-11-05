@@ -75,7 +75,7 @@ class NetUtils {
     } on DioError catch (e) {
       return NetUtils._dioErrorInterceptor(e);
     } finally {
-     Loading.hideLoading(context);
+     // Loading.hideLoading(context);
     }
   }
 
@@ -101,7 +101,7 @@ class NetUtils {
     } on DioError catch (e) {
       return NetUtils._dioErrorInterceptor(e);
     } finally {
-      Loading.hideLoading(context);
+      // Loading.hideLoading(context);
     }
   }
 

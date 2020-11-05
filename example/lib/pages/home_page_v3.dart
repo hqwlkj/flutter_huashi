@@ -105,7 +105,6 @@ class _HomePageState extends State<HomePage> {
             {"type": 'scan', "url": 'images/v3/scan-code-right-btn.png'}
           ];
         });
-        Loading.hideLoading(context);
         faceInfo(context);
         break;
       default:
@@ -139,16 +138,20 @@ class _HomePageState extends State<HomePage> {
   Future<void> scanCodeInfo(BuildContext context) async {
     await audioCache.play('audios/scan-code.mp3'); // 播报音频
     Map<String, dynamic> result = await FlutterHuashi.openScanCode();
-    print('100:result: $result');
     if (result['code'] == 'SUCCESS') {
       LogUtil.e(result['data'], tag: 'result=>1:');
-      if(result['data'].toString().indexOf("{{") > -1){
-        result['data'] = result['data'].toString().substring(1,result['data'].toString().length);
+      if(result['data'].toString().indexOf('codeId') < 0){
+        Utils.showToast(result['messages'] ?? '请出示正常的渝康码信息');
+        scanCodeInfo(context);
+      }else{
+        if(result['data'].toString().indexOf("{{") > -1){
+          result['data'] = result['data'].toString().substring(1,result['data'].toString().length);
+        }
+        LogUtil.e(result['data'], tag: 'result=>2:');
+        Map<String, dynamic> resultMap =
+        JsonUtil.getObject(result['data'], (v) => Map.of(v));
+        checkHealth(context, _type, resultMap['codeId'], json: result['data']);
       }
-      LogUtil.e(result['data'], tag: 'result=>2:');
-      Map<String, dynamic> resultMap =
-      JsonUtil.getObject(result['data'], (v) => Map.of(v));
-      checkHealth(context, _type, resultMap['codeId'], json: result['data']);
     } else {
       Utils.showToast(result['messages'] ?? '渝康码识别失败，请稍后重试...');
     }
@@ -163,16 +166,14 @@ class _HomePageState extends State<HomePage> {
     await FlutterHuashi.stopReadCard; // 先停止读卡
     Map<String, dynamic> result = await FlutterHuashi.initWxFace();
     LogUtil.e(result['code'], tag: 'initWxFace =>  result:');
+    Loading.hideLoading(context);
     Map<String, dynamic> result2 = await FlutterHuashi.wxFaceVerify();
     Loading.showLoading(context, text: '认证中,请稍候...' ,fontSize: 12);
     if (result2['code'] == 'SUCCESS') {
-      LogUtil.e(new DateTime.now(), tag: '=======begin=======');
       Map<String, dynamic> resultMap =
       JsonUtil.getObject(result2['data'], (v) => Map.of(v));
-      LogUtil.e(new DateTime.now(), tag: '=======end=======');
       Response authUser =
       await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
-      LogUtil.e(authUser, tag: 'authUser');
       if (authUser.statusCode == 200) {
         checkHealth(context, 'face', authUser.data['credential_no'],
             username: authUser.data['real_name']);
@@ -191,10 +192,12 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> checkHealth(BuildContext context, String type, String code,
       {String json, String username}) async {
+    Loading.showLoading(context, text: '认证中,请稍候...' ,fontSize: 12);
     if (type == 'card' || type == 'face') {
       Response response = await HomeService.checkHealthByCardNo(context,
           params: {"cardNo": code});
       LogUtil.e(response.data, tag: 'response');
+      Loading.hideLoading(context);
       Navigator.push(
           context,
           new MaterialPageRoute(
@@ -216,9 +219,8 @@ class _HomePageState extends State<HomePage> {
           params: {"codeId": code});
       Response nameResponse = await HomeService.queryNameByQrcode(context,
           params: {"qrcode": json});
-      LogUtil.e(nameResponse, tag: 'nameResponse');
       _count += 1;
-      LogUtil.e(_count, tag: 'scan_count');
+      Loading.hideLoading(context);
       Navigator.push(
           context,
           new MaterialPageRoute(
@@ -252,6 +254,7 @@ class _HomePageState extends State<HomePage> {
               child: InkWell(
                 onTap: (){
                   if(_type == 'face'){
+                    Loading.showLoading(context, text: '初始化中...');
                     faceInfo(context);
                   }
                 },
