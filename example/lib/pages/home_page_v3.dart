@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
     ];
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       LogUtil.e('addPostFrameCallback', tag: 'addPostFrameCallback');
-      readCardInfo();
+      readCardInfo(context);
     });
   }
 
@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
           ];
         });
         Future.delayed(Duration(milliseconds: 1000), () {
-          readCardInfo();
+          readCardInfo(context);
           Loading.hideLoading(context);
         });
         break;
@@ -92,8 +92,8 @@ class _HomePageState extends State<HomePage> {
           ];
         });
         Future.delayed(Duration(milliseconds: 1000), () {
-          scanCodeInfo();
           Loading.hideLoading(context);
+          scanCodeInfo(context);
         });
         break;
       case 'face':
@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> {
   ///
   /// 读取身份证信息进行健康认证
   ///
-  Future<void> readCardInfo() async {
+  Future<void> readCardInfo(BuildContext context) async {
     await audioCache.play('audios/read-card.mp3'); // 播报音频
     Map<String, dynamic> map = await FlutterHuashi.openCardInfo();
     LogUtil.e(map);
@@ -129,14 +129,14 @@ class _HomePageState extends State<HomePage> {
       checkHealth(context, _type, model.iDCard, username: model.peopleName);
     } else {
       Utils.showToast('身份证读取失败，请稍后重试...');
-      readCardInfo();
+      readCardInfo(context);
     }
   }
 
   ///
   /// 扫描渝康码信息进行健康认证
   ///
-  Future<void> scanCodeInfo() async {
+  Future<void> scanCodeInfo(BuildContext context) async {
     await audioCache.play('audios/scan-code.mp3'); // 播报音频
     Map<String, dynamic> result = await FlutterHuashi.openScanCode();
     print('100:result: $result');
@@ -178,6 +178,7 @@ class _HomePageState extends State<HomePage> {
             username: authUser.data['real_name']);
       }
     } else {
+      Loading.hideLoading(context);
       Utils.showToast(result2['message']); // 用户取消了也要让用户可以再次刷脸
       setState(() {
         _currentBg = 'images/v3/face-repeat-bg.png';
@@ -202,7 +203,7 @@ class _HomePageState extends State<HomePage> {
                   username: username,
                   result: response.data['result'].toString()))).then((value) {
         if (type == 'card') {
-          readCardInfo();
+          readCardInfo(context);
         } else {
           audioCache.play('audios/face-repeat.mp3'); // 播报音频
           setState(() {
@@ -225,8 +226,7 @@ class _HomePageState extends State<HomePage> {
                   type: _type,
                   username: nameResponse.data['name'] ?? '',
                   result: response.data['result'].toString()))).then((value) {
-        LogUtil.e(value, tag: 'value');
-        scanCodeInfo();
+        scanCodeInfo(context);
       });
     }
   }
