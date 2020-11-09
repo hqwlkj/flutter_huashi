@@ -200,22 +200,27 @@ class _HomePageState extends State<HomePage> {
           params: {"cardNo": code});
       LogUtil.e(response.data, tag: 'response');
       Loading.hideLoading(context);
-      Navigator.push(
-          context,
-          new MaterialPageRoute(
-              builder: (context) => new ResultPage(
-                  type: _type,
-                  username: username,
-                  result: response.data['result'].toString()))).then((value) {
-        if (type == 'card') {
-          readCardInfo(context);
-        } else {
-          audioCache.play('audios/face-repeat.mp3'); // 播报音频
-          setState(() {
-            _currentBg = 'images/v3/face-repeat-bg.png';
-          });
-        }
-      });
+      if(response.data['result'].toString()=='2'){
+        Utils.showToast('渝康码识别失败，请稍后重试...');
+      }else{
+        Navigator.push(
+            context,
+            new MaterialPageRoute(
+                builder: (context) => new ResultPage(
+                    type: _type,
+                    username: username,
+                    result: response.data['result'].toString()))).then((value) {
+          if (type == 'card') {
+            readCardInfo(context);
+          } else {
+            audioCache.play('audios/face-repeat.mp3'); // 播报音频
+            setState(() {
+              _currentBg = 'images/v3/face-repeat-bg.png';
+            });
+          }
+        });
+      }
+
     } else {
       Response response = await HomeService.checkHealthByCodeId(context,
           params: {"codeId": code});
@@ -223,15 +228,20 @@ class _HomePageState extends State<HomePage> {
           params: {"qrcode": json});
       _count += 1;
       Loading.hideLoading(context);
-      Navigator.push(
-          context,
-          new MaterialPageRoute(
-              builder: (context) => new ResultPage(
-                  type: _type,
-                  username: nameResponse.data['name'] ?? '',
-                  result: response.data['result'].toString()))).then((value) {
-        scanCodeInfo(context);
-      });
+      if(response.data['result'].toString()=='2'){
+        Utils.showToast('渝康码识别失败，请稍后重试...');
+      }else{
+        Navigator.push(
+            context,
+            new MaterialPageRoute(
+                builder: (context) => new ResultPage(
+                    type: _type,
+                    username: nameResponse.data['name'] ?? '',
+                    result: response.data['result'].toString()))).then((value) {
+          scanCodeInfo(context);
+        });
+      }
+
     }
   }
 
