@@ -282,12 +282,12 @@ class _HomePageState extends State<HomePage> {
                   children: _currentBtn.asMap().keys.map((index){
                     if(index == 0){
                       return Positioned(
-                        left: 20,
+                        left: 70,
                         child: InkWell(
                           onTap: () {
                             handleSwitch(context, _currentBtn[index]['type']);
                           },
-                          child: Image.asset(_currentBtn[index]['url'], width: 305.0),
+                          child: Image.asset(_currentBtn[index]['url'], width: 152.0),
                         ),
                       );
                     }else{
@@ -297,7 +297,7 @@ class _HomePageState extends State<HomePage> {
                           onTap: () {
                             handleSwitch(context, _currentBtn[index]['type']);
                           },
-                          child: Image.asset(_currentBtn[index]['url'], width: 305.0),
+                          child: Image.asset(_currentBtn[index]['url'], width: 152.0),
                         ),
                       );
                     }
