@@ -3,7 +3,7 @@ import 'package:flutter_huashi_example/pages/home_demo.dart';
 import 'pages/reader_page.dart';
 import 'pages/result_page.dart';
 
-import 'pages/home_page_v3.dart';
+import 'pages/home_page_v4.dart';
 
 void main() {
   runApp(MyApp());
