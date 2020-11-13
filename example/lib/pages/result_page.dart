@@ -26,12 +26,13 @@ class _ResultPageState extends State<ResultPage> {
   AudioCache audioCache = AudioCache(prefix: '', fixedPlayer: AudioPlayer());
   Timer _timer;
   int seconds;
-
+  String _upTime;
   @override
   void initState() {
     super.initState();
     /// 获取总秒数
     seconds = 2;
+    _upTime='${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day} ${DateTime.now().hour}:${DateTime.now().minute < 10 ? '0${DateTime.now().minute}' : DateTime.now().minute}:${DateTime.now().second}';
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _startTimer();
       if (widget.result == "0") {
@@ -165,7 +166,7 @@ class _ResultPageState extends State<ResultPage> {
                             fontWeight: FontWeight.w400)),
                     VEmptyView(5),
                     Text(
-                        '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day} ${DateTime.now().hour}:${DateTime.now().minute < 10 ? '0${DateTime.now().minute}' : DateTime.now().minute}:${DateTime.now().second}',
+                        _upTime,
                         style: TextStyle(
                             color: _globalColor,
                             fontSize: 16,
