@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +15,7 @@ class NetUtils {
 //  static final String mockUrl = 'http://yapi.parsec.com.cn/mock/448';
   static final String debugBaseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
   static final String baseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
-  static const int CONNECT_TIMEOUT = 1000 * 10;
+  static const int CONNECT_TIMEOUT = 1000 * 3;
   static const int RECEIVE_TIMEOUT = 3000;
 
   static void init() async {
@@ -47,23 +46,19 @@ class NetUtils {
       ..interceptors.add(CustomLogInterceptor(responseBody: true, requestBody: true));
   }
 
-  static Future<Response> _dioErrorInterceptor(BuildContext context, DioError e) {
+  static Future<Response> _dioErrorInterceptor(DioError e) {
     if (e == null) {
-      Loading.hideLoading(context);
       return Future.error(Response(data: -1));
     }
 
     switch (e.type) {
       case DioErrorType.CANCEL:
-        return Future.error(Response(data: -1, statusMessage: '请求取消'));
+        // return Future.error(Response(data: -1, statusMessage: '请求取消'));
       case DioErrorType.CONNECT_TIMEOUT:
-        Loading.hideLoading(context);
-        return Future.error(Response(data: -1, statusMessage: '连接超时'));
+        // return Future.error(Response(data: -1, statusMessage: '连接超时'));
       case DioErrorType.SEND_TIMEOUT:
-        Loading.hideLoading(context);
-        return Future.error(Response(data: -1, statusMessage: '请求超时'));
+        // return Future.error(Response(data: -1, statusMessage: '请求超时'));
       case DioErrorType.RECEIVE_TIMEOUT:
-        Loading.hideLoading(context);
         return Future.error(Response(data: -1, statusMessage: '响应超时'));
       case DioErrorType.RESPONSE:
         if (e.response.statusCode >= 300 && e.response.statusCode < 400) {
@@ -93,7 +88,7 @@ class NetUtils {
     try {
       return await _dio.get(url, queryParameters: params, options: options);
     } on DioError catch (e) {
-      return NetUtils._dioErrorInterceptor(context, e);
+      return NetUtils._dioErrorInterceptor(e);
     } finally {
      // Loading.hideLoading(context);
     }
@@ -119,7 +114,7 @@ class NetUtils {
           onReceiveProgress: onReceiveProgress,
           onSendProgress: onSendProgress);
     } on DioError catch (e) {
-      return NetUtils._dioErrorInterceptor(context, e);
+      return NetUtils._dioErrorInterceptor(e);
     } finally {
       // Loading.hideLoading(context);
     }
@@ -139,7 +134,7 @@ class NetUtils {
           options: options,
           cancelToken: cancelToken);
     } on DioError catch (e) {
-      return NetUtils._dioErrorInterceptor(context, e);
+      return NetUtils._dioErrorInterceptor(e);
     } finally {
       Loading.hideLoading(context);
     }
@@ -163,7 +158,7 @@ class NetUtils {
           onSendProgress: onSendProgress,
           onReceiveProgress: onReceiveProgress);
     } on DioError catch (e) {
-      return NetUtils._dioErrorInterceptor(context, e);
+      return NetUtils._dioErrorInterceptor(e);
     } finally {
       Loading.hideLoading(context);
     }

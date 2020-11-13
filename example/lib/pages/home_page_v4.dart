@@ -193,59 +193,78 @@ class _HomePageState extends State<HomePage> {
       {String json, String username}) async {
     Loading.showLoading(context, text: '认证中,请稍候...' ,fontSize: 12);
     if (type == 'card' || type == 'face') {
-      Response response = await HomeService.checkHealthByCardNo(context, params: {"cardNo": code});
-      Loading.hideLoading(context);
-      LogUtil.e(response, tag: 'response');
-      if(response == null || response?.statusCode != 200 || response?.data['result'].toString()=='2'){
-        if (type == 'card') {
-          Utils.showToast('身份证认证失败，请稍后重试...');
-          readCardInfo(context);
-        } else {
-          Utils.showToast('人脸认证失败，请稍后重试...');
-          audioCache.play('audios/face-repeat.mp3'); // 播报音频
-          setState(() {
-            _currentBg = 'images/v3/face-repeat-bg.png';
-          });
-        }
-      } else {
-        Navigator.push(
-            context,
-            new MaterialPageRoute(
-                builder: (context) => new ResultPage(
-                    type: _type,
-                    username: username,
-                    result: response.data['result'].toString()))).then((value) {
+      HomeService.checkHealthByCardNo(context, params: {"cardNo": code}).then((response) {
+        Loading.hideLoading(context);
+        LogUtil.e(response, tag: '我是返回的：response=>');
+        if(response == null || response?.statusCode != 200 || response?.data['result'].toString()=='2'){
           if (type == 'card') {
+            Utils.showToast('身份证认证失败，请稍后重试...');
             readCardInfo(context);
           } else {
+            Utils.showToast('人脸认证失败，请稍后重试...');
             audioCache.play('audios/face-repeat.mp3'); // 播报音频
             setState(() {
               _currentBg = 'images/v3/face-repeat-bg.png';
             });
           }
-        });
-      }
+        } else {
+          Navigator.push(
+              context,
+              new MaterialPageRoute(
+                  builder: (context) => new ResultPage(
+                      type: _type,
+                      username: username,
+                      result: response.data['result'].toString()))).then((value) {
+            if (type == 'card') {
+              readCardInfo(context);
+            } else {
+              audioCache.play('audios/face-repeat.mp3'); // 播报音频
+              setState(() {
+                _currentBg = 'images/v3/face-repeat-bg.png';
+              });
+            }
+          });
+        }
+      }).catchError((e){
+        Loading.hideLoading(context);
+        LogUtil.e(e, tag: 'onError');
+        if (type == 'card') {
+          Utils.showToast('身份证认证超时，请重新识别...');
+          readCardInfo(context);
+        } else {
+          Utils.showToast('人脸认证超时，请稍后重试...');
+          audioCache.play('audios/face-repeat.mp3'); // 播报音频
+          setState(() {
+            _currentBg = 'images/v3/face-repeat-bg.png';
+          });
+        }
+      });
     } else {
-      Response response = await HomeService.checkHealthByCodeId(context,
-          params: {"codeId": code});
-      Response nameResponse = await HomeService.queryNameByQrcode(context,
-          params: {"qrcode": json});
-      _count += 1;
-      Loading.hideLoading(context);
-      if(response == null || response?.statusCode != 200 || response?.data['result'].toString()=='2'){
-        Utils.showToast('渝康码识别失败，请稍后重试...');
-        scanCodeInfo(context);
-      }else{
-        Navigator.push(
-            context,
-            new MaterialPageRoute(
-                builder: (context) => new ResultPage(
-                    type: _type,
-                    username: nameResponse.data['name'] ?? '',
-                    result: response.data['result'].toString()))).then((value) {
+      HomeService.checkHealthByCodeId(context,
+          params: {"codeId": code}).then((response) async {
+        Response nameResponse = await HomeService.queryNameByQrcode(context,
+            params: {"qrcode": json});
+        _count += 1;
+        Loading.hideLoading(context);
+        if(response == null || response?.statusCode != 200 || response?.data['result'].toString()=='2'){
+          Utils.showToast('渝康码识别失败，请稍后重试...');
           scanCodeInfo(context);
-        });
-      }
+        }else{
+          Navigator.push(
+              context,
+              new MaterialPageRoute(
+                  builder: (context) => new ResultPage(
+                      type: _type,
+                      username: nameResponse.data['name'] ?? '',
+                      result: response.data['result'].toString()))).then((value) {
+            scanCodeInfo(context);
+          });
+        }
+      }).catchError((e){
+        Loading.hideLoading(context);
+        Utils.showToast('渝康码认证超时，请重新扫码...');
+        scanCodeInfo(context);
+      });
 
     }
   }
