@@ -15,7 +15,7 @@ class NetUtils {
 //  static final String mockUrl = 'http://yapi.parsec.com.cn/mock/448';
   static final String debugBaseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
   static final String baseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
-  static const int CONNECT_TIMEOUT = 1000 * 3;
+  static const int CONNECT_TIMEOUT = 1000 * 8;
   static const int RECEIVE_TIMEOUT = 3000;
 
   static void init() async {
@@ -53,11 +53,11 @@ class NetUtils {
 
     switch (e.type) {
       case DioErrorType.CANCEL:
-        // return Future.error(Response(data: -1, statusMessage: '请求取消'));
+         return Future.error(Response(data: -1, statusMessage: '请求取消'));
       case DioErrorType.CONNECT_TIMEOUT:
-        // return Future.error(Response(data: -1, statusMessage: '连接超时'));
+         return Future.error(Response(data: -1, statusMessage: '连接超时'));
       case DioErrorType.SEND_TIMEOUT:
-        // return Future.error(Response(data: -1, statusMessage: '请求超时'));
+         return Future.error(Response(data: -1, statusMessage: '请求超时'));
       case DioErrorType.RECEIVE_TIMEOUT:
         return Future.error(Response(data: -1, statusMessage: '响应超时'));
       case DioErrorType.RESPONSE:

@@ -116,7 +116,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> readCardInfo(BuildContext context) async {
     await audioCache.play('audios/read-card.mp3'); // 播报音频
     Map<String, dynamic> map = await FlutterHuashi.openCardInfo();
-    LogUtil.e(map);
+    LogUtil.e(map,tag:'idcard');
     if (map['code'] == 'SUCCESS') {
       CardInfoModel model =
       JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
@@ -244,9 +244,10 @@ class _HomePageState extends State<HomePage> {
           params: {"codeId": code}).then((response) async {
         Response nameResponse = await HomeService.queryNameByQrcode(context,
             params: {"qrcode": json});
+        LogUtil.e(nameResponse?.statusCode, tag: 'nameResponse');
         _count += 1;
         Loading.hideLoading(context);
-        if(response == null || response?.statusCode != 200 || response?.data['result'].toString()=='2'){
+        if(response == null || response?.statusCode != 200 || response?.data['result'].toString()=='2' || nameResponse?.statusCode !=200){
           Utils.showToast('渝康码识别失败，请稍后重试...');
           scanCodeInfo(context);
         }else{
