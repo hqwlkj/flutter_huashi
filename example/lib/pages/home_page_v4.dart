@@ -196,7 +196,7 @@ class _HomePageState extends State<HomePage> {
       HomeService.checkHealthByCardNo(context, params: {"cardNo": code}).then((response) {
         Loading.hideLoading(context);
         LogUtil.e(response, tag: '我是返回的：response=>');
-        if(response == null || response?.statusCode != 200 || response?.data['result'].toString()=='2'){
+        if(response == null || response?.statusCode != 200 || response?.data['data'].toString()=='2'){
           if (type == 'card') {
             Utils.showToast('身份证认证失败，请稍后重试...');
             readCardInfo(context);
@@ -208,22 +208,35 @@ class _HomePageState extends State<HomePage> {
             });
           }
         } else {
-          Navigator.push(
-              context,
-              new MaterialPageRoute(
-                  builder: (context) => new ResultPage(
-                      type: _type,
-                      username: username,
-                      result: response.data['result'].toString()))).then((value) {
+          if(response?.data['errcode']==0){
+            Navigator.push(
+                context,
+                new MaterialPageRoute(
+                    builder: (context) => new ResultPage(
+                        type: _type,
+                        username: username,
+                        result: response.data['data'].toString()))).then((value) {
+              if (type == 'card') {
+                readCardInfo(context);
+              } else {
+                audioCache.play('audios/face-repeat.mp3'); // 播报音频
+                setState(() {
+                  _currentBg = 'images/v3/face-repeat-bg.png';
+                });
+              }
+            });
+          }else{
             if (type == 'card') {
+              Utils.showToast(response?.data['errmsg']);
               readCardInfo(context);
             } else {
+              Utils.showToast('人脸认证失败，请稍后重试...');
               audioCache.play('audios/face-repeat.mp3'); // 播报音频
               setState(() {
                 _currentBg = 'images/v3/face-repeat-bg.png';
               });
             }
-          });
+          }
         }
       }).catchError((e){
         Loading.hideLoading(context);

@@ -8,7 +8,7 @@ class HomeService {
   /// @params cardNo
   static Future<Response> checkHealthByCardNo(BuildContext context,
       {@required Map<String, dynamic> params}) async {
-    return await NetUtils.post(context, '/check-health-by-card-no', data: params, isShowLoading: false);
+    return await NetUtils.post(context, '/check-health-by-card-no-v1', data: params, isShowLoading: false);
   }
 
   ///
