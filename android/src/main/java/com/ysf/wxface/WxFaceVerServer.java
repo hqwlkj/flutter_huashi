@@ -115,6 +115,7 @@ public class WxFaceVerServer {
                     if (map.get(WxConstant.RAW_DATA) != null) {
                         String rawdata = map.get(WxConstant.RAW_DATA).toString();
                         LoggerUtil.i_file("rawData获取成功");
+                        LoggerUtil.i_file(rawdata);
                         getWxPayFaceAuthInfo(rawdata, callback);
                     } else {
                         LoggerUtil.i_file("rawData获取失败");
@@ -175,7 +176,6 @@ public class WxFaceVerServer {
                             mFaceMap.put("authinfo", mAuthinfo);
                             mFaceMap.put("ask_face_permit", "1");
                             //  mFaceMap.put("ask_ret_page", "1");
-
                             getWxPayFaceCodeByCamera(mFaceMap, callback);
                         } else {
                             LoggerUtil.i("获取人脸凭证失败");
