@@ -265,7 +265,7 @@ class _HomePageState extends State<HomePage> {
           scanCodeInfo(context);
         }else{
           Navigator.push(
-              context,
+                context,
               new MaterialPageRoute(
                   builder: (context) => new ResultPage(
                       type: _type,

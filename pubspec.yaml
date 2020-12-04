@@ -1,8 +1,8 @@
 name: flutter_huashi
 description: Huashi Flutter Plugin.
 version: 0.0.1
-author:
-homepage:
+author: Yanghc <hqwlkj@sina.com>
+homepage: https://github.com/hqwlkj/flutter_huashi
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
