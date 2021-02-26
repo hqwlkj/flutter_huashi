@@ -2,7 +2,7 @@
 
 Huashi Flutter Plugin.
 
-<h2 align="center">该插件需要使用华视电子的专用设备，普遍的手机和Android设备都是不能正常使用的</h2>
+<h3 align="center">该插件需要使用华视电子的专用设备，普通Android手机和Android设备都是不能正常使用的</h2>
 
 
 
