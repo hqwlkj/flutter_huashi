@@ -13,8 +13,7 @@ import com.urovo.xbsdk.Function
 import com.urovo.xbsdk.IDCardReadCallBack
 import com.urovo.xbsdk.ScanCallBack
 import com.ysf.card.util.FastJsonUtil
-import com.ysf.card.util.ICallback
-import com.ysf.wxface.utils.WxFaceUtil
+import com.ysf.card.util.PlayerUtil
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -61,7 +60,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         @JvmStatic
         fun registerWith(registrar: Registrar) {
             HuaShiHandler.setContext(registrar.activity())
-            HuaShiHandler.initDialog(registrar.activity())
             val channel = MethodChannel(registrar.messenger(), "flutter_huashi")
             HuaShiHandler.setMethodChannel(channel)
             channel.setMethodCallHandler(FlutterHuashiPlugin())
@@ -72,24 +70,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         when (call.method) {
             "getPlatformVersion" -> {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
-            }
-            "initWxpayface" -> { // 初始化刷脸支付
-                initWxpayface(result)
-            }
-            "faceVerified" -> {
-                faceRecognition(result)
-            }
-            "wxFacePay" -> {
-                wxFacePay(result)
-            }
-            "releaseWxpayface" -> {
-                releaseWxpayface()
-            }
-            "showPayLoading" -> {
-                showDialog()
-            }
-            "hidePayLoading" -> {
-                hideDialog()
             }
             "openCardInfo" -> {
                 openCard(result)
@@ -113,6 +93,7 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     private fun openCard(@NonNull result: Result) {
         Function.doReadIDCard(HuaShiHandler.getContext(), object : IDCardReadCallBack {
             override fun success(ic: HSIDCardInfo?) {
+                PlayerUtil.play(HuaShiHandler.getContext())
                 uiThreadHandler.post {
                     val params: MutableMap<String, Any> = HashMap()
                     params["data"] = FastJsonUtil.toJson(ic)
@@ -141,6 +122,7 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     private fun openScanCode(@NonNull result: Result) {
         Function.doScanLoop(object : ScanCallBack {
             override fun success(data: String?) {
+                PlayerUtil.play(HuaShiHandler.getContext())
                 Function.stopScan() // 停止扫码
                 uiThreadHandler.post {
                     val params: MutableMap<String, Any> = HashMap()
@@ -175,54 +157,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         result.success("SUCCESS")
     }
 
-    private fun showDialog() {
-        Log.i(tag, "showDialog" + HuaShiHandler.getContext())
-        HuaShiHandler.showDialog()
-    }
-
-    private fun hideDialog() {
-        Log.i(tag, "hideDialog" + HuaShiHandler.getContext())
-        HuaShiHandler.hideDialog()
-    }
-
-    private fun initWxpayface(@NonNull result: Result) {
-        WxFaceUtil.init(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-
-    private fun faceRecognition(@NonNull result: Result) {
-        WxFaceUtil.InfoVer(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    private fun wxFacePay(@NonNull result: Result) {
-        WxFaceUtil.FacePay(HuaShiHandler.getContext(), "", object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    /**
-     * 释放微信刷脸
-     */
-    private fun releaseWxpayface() {
-        WxFaceUtil.releaseWxpayface(HuaShiHandler.getContext())
-    }
-
     //广播接收者
     class LocatiopnBroadcast : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -249,7 +183,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         HuaShiHandler.setContext(binding.activity);
-        HuaShiHandler.initDialog(binding.activity)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
