@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'pages/reader_page.dart';
-import 'pages/result_page.dart';
 
-import 'pages/home_page_v3.dart';
-import 'pages/scan_page_v3.dart';
+import 'pages/home_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,9 +27,6 @@ class _MyAppState extends State<MyApp> {
       home: new HomePage(),
       routes: <String, WidgetBuilder> {
         '/home': (BuildContext context) => HomePage(),
-        '/scan': (BuildContext context) => ScanPage(),
-        '/reader': (BuildContext context) => ReaderPage(),
-        '/result': (BuildContext context) => ResultPage()
       },
     );
   }

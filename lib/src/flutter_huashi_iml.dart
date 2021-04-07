@@ -15,79 +15,24 @@ Future<String> get platformVersion async {
   return version;
 }
 
-///
-/// 初始化读卡器
-///
-Future<String> get initCard async {
-  final String result = await _channel.invokeMethod('initCard');
-  return result;
-}
-
-///
-/// 开启读卡
-///
-Future<String> get openCard async {
-  final String result = await _channel.invokeMethod('openCard');
-  return result;
-}
-
-///
-/// 开启自动读卡
-///
-Future<Map<String, dynamic>> get openAutoCard async {
-  final Map<String, dynamic> result = await _channel.invokeMapMethod('openAutoCard');
-  return result;
-}
-
-///
 /// 开启扫码
-///
-Future<Map<String, dynamic>> get scanCode async {
-  final Map<String, dynamic> result = await _channel.invokeMapMethod('scanCode');
+Future<Map<String, dynamic>> openScanCode() async {
+  final Map<String, dynamic> result = await _channel.invokeMapMethod('openScanCode');
   return result;
 }
 
-///
-/// 关闭扫码
-///
-Future<String> get closeScanCode async {
-  final String result = await _channel.invokeMethod('closeScanCode');
-  return result;
+/// 停止扫码
+Future<String> get stopScanCode async{
+  return await _channel.invokeMethod("stopScanCode");
 }
 
-///
-/// 关闭读卡
-///
-Future<String> get closeOpenCard async {
-  final String result = await _channel.invokeMethod('closeOpenCard');
-  return result;
+/// 停止读卡
+Future<String> get stopReadCard async{
+  return await _channel.invokeMethod("stopReadCard");
 }
-
-/// 开启 loading
-Future<void> showPayLoadingDialog() async {
-await _channel.invokeMethod('showPayLoading');
-}
-
-/// 关闭 loading
-Future<void> hidePayLoadingDialog() async {
-await _channel.invokeMethod('hidePayLoading');
-}
-
-/// 初始化人脸识别
-Future<Map<String, dynamic>> initWxFace() async {
-  final Map<String, dynamic> result = await _channel.invokeMapMethod('initWxpayface');
-  return result;
-}
-
-/// 人脸识别获取 face_sid 和 opneid
-Future<Map<String, dynamic>> wxFaceVerify() async {
-  final Map<String, dynamic> result = await _channel.invokeMapMethod('faceVerified');
-  return result;
-}
-
-/// 人脸支付
-Future<Map<String, dynamic>> wxFacePay() async {
-  final Map<String, dynamic> result = await _channel.invokeMapMethod('wxFacePay');
+/// 新的开始读卡
+Future<Map<String, dynamic>> openCardInfo() async {
+  final Map<String, dynamic> result = await _channel.invokeMapMethod('openCardInfo');
   return result;
 }
 

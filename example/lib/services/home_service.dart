@@ -8,7 +8,7 @@ class HomeService {
   /// @params cardNo
   static Future<Response> checkHealthByCardNo(BuildContext context,
       {@required Map<String, dynamic> params}) async {
-    return await NetUtils.post(context, '/check-health-by-card-no', data: params);
+    return await NetUtils.post(context, '/check-health-by-card-no-v1', data: params, isShowLoading: false);
   }
 
   ///
@@ -34,6 +34,6 @@ class HomeService {
   /// @params faceSid 微信刷脸获取的face_sid
   ///
   static Future<Response> getAuthUserInfo(BuildContext context,String faceSid) async {
-    return await NetUtils.get(context, "https://healthcard.hipay365.com/wx/certification?face_sid=$faceSid");
+    return await NetUtils.get(context, "http://parsec.cqkqinfo.com/app/stage-exhibition-api/face/wx/certification?face_sid=$faceSid");
   }
 }

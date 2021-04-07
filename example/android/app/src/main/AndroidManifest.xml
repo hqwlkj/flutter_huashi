@@ -7,10 +7,10 @@
          additional functionality it is fine to subclass or reimplement
          FlutterApplication and put your custom class here. -->
     <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -49,6 +49,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
@@ -56,5 +58,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <receiver android:name="BootBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

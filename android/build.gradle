@@ -32,7 +32,7 @@ android {
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
-        main.jniLibs.srcDirs +='src/main/jniLibs'
+//        main.jniLibs.srcDirs +='src/main/jniLibs'
     }
     defaultConfig {
         minSdkVersion 19
@@ -40,9 +40,10 @@ android {
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'armeabi'
         }
         packagingOptions {
-            pickFirst 'src/main/jniLibs/armeabi-v7a/libHSRAW2BMP.so'
-            pickFirst 'src/main/jniLibs/armeabi-v7a/libserial_port.so'
-            pickFirst 'src/main/jniLibs/armeabi-v7a/libwlt2bmp.so'
+//            exclude 'lib/arm64-v8a/libHSRAW2BMP.so'
+//            pickFirst 'src/main/jniLibs/armeabi-v7a/libHSRAW2BMP.so'
+//            pickFirst 'src/main/jniLibs/armeabi-v7a/libserial_port.so'
+//            pickFirst 'src/main/jniLibs/armeabi-v7a/libwlt2bmp.so'
         }
     }
     lintOptions {
@@ -55,7 +56,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: [])
-    implementation (name:'wxfacepay-release', ext: 'aar')
+    implementation (name:'xbsdk-debug', ext: 'aar')
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

@@ -1,4 +1,3 @@
-import 'package:common_utils/common_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
 import 'package:flutter/material.dart';
@@ -14,14 +13,20 @@ class NetUtils {
 
   ///  服务器请求地址
 //  static final String mockUrl = 'http://yapi.parsec.com.cn/mock/448';
-  static final String debugBaseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
-  static final String baseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
+//  static final String debugBaseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
+//  static final String baseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
+    static final String debugBaseUrl = 'https://h5b.parsec.com.cn/app/ykm-demo-api';
+  static final String baseUrl = 'https://h5b.parsec.com.cn/app/ykm-demo-api';
+  static const int CONNECT_TIMEOUT = 1000 * 8;
+  static const int RECEIVE_TIMEOUT = 3000;
 
   static void init() async {
     const bool inProduction = const bool.fromEnvironment("dart.vm.product");
 
     _dio = Dio(BaseOptions(
         baseUrl: inProduction ? '$baseUrl' : '$debugBaseUrl',
+        connectTimeout: CONNECT_TIMEOUT,
+        receiveTimeout:  RECEIVE_TIMEOUT,
         followRedirects: false))
       ..interceptors.add(InterceptorsWrapper(onRequest: (RequestOptions options) async {
         // 在请求被发送之前做一些事情
@@ -43,23 +48,35 @@ class NetUtils {
       ..interceptors.add(CustomLogInterceptor(responseBody: true, requestBody: true));
   }
 
-  static Future<Response> _dioErrorInterceptor(e) {
+  static Future<Response> _dioErrorInterceptor(DioError e) {
     if (e == null) {
       return Future.error(Response(data: -1));
-    } else if (e.response != null) {
-      if (e.response.statusCode >= 300 && e.response.statusCode < 400) {
-        return Future.error(Response(data: -1));
-      } else if (e.response.statusCode == 403) {
-        // _reLogin();
-        return Future.error(Response(data: -1));
-      } else if (e.response.statusCode == 404) {
-        _notFound(); // 现在是弹窗提示，正确的是显示一个 页面
-        return Future.error(Response(data: -1));
-      } else {
+    }
+
+    switch (e.type) {
+      case DioErrorType.CANCEL:
+         return Future.error(Response(data: -1, statusMessage: '请求取消'));
+      case DioErrorType.CONNECT_TIMEOUT:
+         return Future.error(Response(data: -1, statusMessage: '连接超时'));
+      case DioErrorType.SEND_TIMEOUT:
+         return Future.error(Response(data: -1, statusMessage: '请求超时'));
+      case DioErrorType.RECEIVE_TIMEOUT:
+        return Future.error(Response(data: -1, statusMessage: '响应超时'));
+      case DioErrorType.RESPONSE:
+        if (e.response.statusCode >= 300 && e.response.statusCode < 400) {
+          return Future.error(Response(data: -1));
+        } else if (e.response.statusCode == 403) {
+          // _reLogin();
+          return Future.error(Response(data: -1));
+        } else if (e.response.statusCode == 404) {
+          _notFound(); // 现在是弹窗提示，正确的是显示一个 页面
+          return Future.error(Response(data: -1));
+        } else {
+          return Future.value(e.response);
+        }
+        break;
+      default:
         return Future.value(e.response);
-      }
-    } else {
-      return Future.error(Response(data: -1));
     }
   }
 
@@ -75,7 +92,7 @@ class NetUtils {
     } on DioError catch (e) {
       return NetUtils._dioErrorInterceptor(e);
     } finally {
-     Loading.hideLoading(context);
+     // Loading.hideLoading(context);
     }
   }
 
@@ -101,7 +118,7 @@ class NetUtils {
     } on DioError catch (e) {
       return NetUtils._dioErrorInterceptor(e);
     } finally {
-      Loading.hideLoading(context);
+      // Loading.hideLoading(context);
     }
   }
 

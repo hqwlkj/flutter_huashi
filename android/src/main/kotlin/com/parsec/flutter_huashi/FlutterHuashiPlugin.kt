@@ -7,11 +7,13 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.NonNull
+import com.huashi.otg.sdk.HSIDCardInfo
 import com.parsec.flutter_huashi.handlers.HuaShiHandler
-import com.ysf.card.util.CardApi
-import com.ysf.card.util.CardUtil
-import com.ysf.card.util.ICallback
-import com.ysf.wxface.utils.WxFaceUtil
+import com.urovo.xbsdk.Function
+import com.urovo.xbsdk.IDCardReadCallBack
+import com.urovo.xbsdk.ScanCallBack
+import com.ysf.card.util.FastJsonUtil
+import com.ysf.card.util.PlayerUtil
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -58,7 +60,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         @JvmStatic
         fun registerWith(registrar: Registrar) {
             HuaShiHandler.setContext(registrar.activity())
-            HuaShiHandler.initDialog(registrar.activity())
             val channel = MethodChannel(registrar.messenger(), "flutter_huashi")
             HuaShiHandler.setMethodChannel(channel)
             channel.setMethodCallHandler(FlutterHuashiPlugin())
@@ -70,41 +71,17 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
             "getPlatformVersion" -> {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             }
-            "initCard" -> {
-                result.success(initCard())
+            "openCardInfo" -> {
+                openCard(result)
             }
-            "openCard" -> {
-                result.success(openCard())
+            "openScanCode" -> {
+                openScanCode(result)
             }
-            "openAutoCard" -> {
-                openAutoCard(result)
+            "stopScanCode" -> {
+                stopScanCode(result)
             }
-            "scanCode" -> {
-                openScan(result)
-            }
-            "closeScanCode" -> {
-                result.success(closeScanCode())
-            }
-            "closeOpenCard" -> {
-                result.success(closeOpenCard())
-            }
-            "initWxpayface" -> { // 初始化刷脸支付
-                initWxpayface(result)
-            }
-            "faceVerified" -> {
-                faceRecognition(result)
-            }
-            "wxFacePay" -> {
-                wxFacePay(result)
-            }
-            "releaseWxpayface" -> {
-                releaseWxpayface()
-            }
-            "showPayLoading" -> {
-                showDialog()
-            }
-            "hidePayLoading" -> {
-                hideDialog()
+            "stopReadCard" -> {
+                stopReadCard(result)
             }
             else -> {
                 result.notImplemented()
@@ -112,20 +89,57 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         }
     }
 
-    private fun showDialog() {
-        Log.i(tag, "showDialog" + HuaShiHandler.getContext())
-        HuaShiHandler.showDialog()
-    }
 
-    private fun hideDialog() {
-        Log.i(tag, "hideDialog" + HuaShiHandler.getContext())
-        HuaShiHandler.hideDialog()
-    }
-
-    private fun initWxpayface(@NonNull result: Result) {
-        WxFaceUtil.init(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
+    private fun openCard(@NonNull result: Result) {
+        Function.doReadIDCard(HuaShiHandler.getContext(), object : IDCardReadCallBack {
+            override fun success(ic: HSIDCardInfo?) {
+                PlayerUtil.play(HuaShiHandler.getContext())
                 uiThreadHandler.post {
+                    val params: MutableMap<String, Any> = HashMap()
+                    params["data"] = FastJsonUtil.toJson(ic)
+                    params["code"] = "SUCCESS"
+                    Log.e("HUASHI-CARD",  """
+     证件类型：身份证
+     姓名：${ic!!.peopleName}
+     性别：${ic.sex}
+     民族：${ic.people}
+     """.trimIndent())
+                    result.success(params)
+                }
+            }
+
+            override fun fail(code: Int, message: String?) {
+                Log.e("HUASHI-CARD", code.toString())
+                Log.e("HUASHI-CARD", message.toString())
+                // 失败了先不处理异常信息
+//            uiThreadHandler.post {
+//                result.error(code.toString(), message.toString(), null)
+//            }
+            }
+        })
+    }
+
+    private fun openScanCode(@NonNull result: Result) {
+        Function.doScanLoop(object : ScanCallBack {
+            override fun success(data: String?) {
+                PlayerUtil.play(HuaShiHandler.getContext())
+                Function.stopScan() // 停止扫码
+                uiThreadHandler.post {
+                    val params: MutableMap<String, Any> = HashMap()
+                    params["data"] = data.toString()
+                    params["code"] = "SUCCESS"
+                    result.success(params)
+                }
+            }
+
+            override fun fail(code: Int, message: String?) {
+                uiThreadHandler.post {
+                    Log.e("HUASHI-CARD", code.toString())
+                    Log.e("HUASHI-CARD", message.toString())
+                    val params: MutableMap<String, Any> = HashMap()
+                    params["code"] = "ERROR"
+                    params["resultCode"] = code
+                    params["message"] = message.toString()
                     result.success(params)
                 }
             }
@@ -133,86 +147,14 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     }
 
 
-    private fun faceRecognition(@NonNull result: Result) {
-        WxFaceUtil.InfoVer(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
+    private fun stopScanCode(@NonNull result: Result){
+        Function.stopScan()
+        result.success("SUCCESS")
     }
 
-    private fun wxFacePay(@NonNull result: Result) {
-        WxFaceUtil.FacePay(HuaShiHandler.getContext(), "", object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    /**
-     * 释放微信刷脸
-     */
-    private fun releaseWxpayface() {
-        WxFaceUtil.releaseWxpayface(HuaShiHandler.getContext())
-    }
-
-
-    private fun initCard(): String {
-        Log.i(tag, "initCard")
-        try {
-            if (CardUtil.setCard()) return "SUCCESS"
-        } catch (e: InterruptedException) {
-            return "ERROR"
-        }
-        return "ERROR"
-    }
-
-    private fun openCard(): String {
-        Log.i(tag, "openCard")
-        CardApi.openCard(HuaShiHandler.getContext())
-        return "SUCCESS"
-    }
-
-    private fun openAutoCard(@NonNull result: Result) {
-        Log.i(tag, "openAutoCard")
-        CardApi.openAutoCard(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    private fun openScan(@NonNull result: Result) {
-        Log.i(tag, "openScan")
-        CardApi.openScan(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    private fun closeScanCode(): String {
-        Log.i(tag, "closeScanCode")
-        CardApi.closeScan()
-        return "SUCCESS"
-    }
-
-    private fun closeOpenCard(): String {
-        Log.i(tag, "closeOpenCard")
-        CardApi.closeOpenCard()
-        return "SUCCESS"
-    }
-
-    fun sendMessage() {
-
+    private fun stopReadCard(@NonNull result: Result){
+        Function.stopReadIDCard()
+        result.success("SUCCESS")
     }
 
     //广播接收者
@@ -241,7 +183,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         HuaShiHandler.setContext(binding.activity);
-        HuaShiHandler.initDialog(binding.activity)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {

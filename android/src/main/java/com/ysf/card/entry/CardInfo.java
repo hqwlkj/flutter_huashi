@@ -1,9 +1,5 @@
 package com.ysf.card.entry;
 
-
-
-
-
 import com.huashi.otg.sdk.HSIDCardInfo;
 
 import java.io.Serializable;
