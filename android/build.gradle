@@ -56,7 +56,6 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: [])
-    implementation (name:'wxfacepay-release', ext: 'aar')
     implementation (name:'xbsdk-debug', ext: 'aar')
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

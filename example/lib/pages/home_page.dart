@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_huashi/flutter_huashi.dart' as FlutterHuashi;
 import 'package:flutter_huashi_example/utils/net_utils.dart';
 
-import 'reader_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -16,6 +15,8 @@ class _HomePageState extends State<HomePage> {
 
   StreamSubscription<Map> _flutterHuashi;
   String _platformVersion = 'Unknown';
+  String _cardInfo = '';
+  String _scanInfo = '';
 
   @override
   void initState() {
@@ -54,64 +55,119 @@ class _HomePageState extends State<HomePage> {
     NetUtils.init();
     return Scaffold(
       appBar: AppBar(
-        title: const Text(''),
-        backgroundColor: Color(0xff2762D9),
+        title: const Text('Example'),
         elevation: 0,
       ),
       body: Container(
-        color: Color(0xff2762D9),
         child: Column(
           children: [
-            Expanded(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 30,),
-                  child: Center(
-                    child: Image.asset('images/main.png'),
-                  ),
-                )),
-            Padding(
-              padding: EdgeInsets.only(top: 35, bottom: 15),
-              child: Center(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          new MaterialPageRoute(builder: (context) => new ReaderPage(type: 'card')),
-                        );
-                      },
-                      child: Container(
-                        width: 178.0,
-                        child: Image.asset('images/sbsfzxx.png'),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    InkWell(
-                      onTap: () {
-                        print('扫描渝康码');
-                        Navigator.push(
-                          context,
-                          new MaterialPageRoute(builder: (context) => new ReaderPage(type: 'scan')),
-                        );
-                      },
-                      child: Container(
-                        width: 178.0,
-                        child: Image.asset('images/smykm.png'),
-                      ),
-                    )
-                  ],
+            Text(_platformVersion),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _cardInfo = '读取中...';
+                    });
+                    await FlutterHuashi.stopScanCode;
+                    Map<String, dynamic> result = await FlutterHuashi.openCardInfo();
+                    print(result.toString());
+                    setState(() {
+                      _cardInfo = result.toString() ?? '读取失败';
+                    });
+                  },
+                  child: Text('读取身份证'),
                 ),
-              ),
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _cardInfo = '读取中...';
+                    });
+                    await FlutterHuashi.stopScanCode;
+                    Map<String, dynamic> result = await FlutterHuashi.openCardInfo(disableAudio: true);
+                    print(result.toString());
+                    setState(() {
+                      _cardInfo = result.toString() ?? '读取失败';
+                    });
+                  },
+                  child: Text('静音读取身份证'),
+                ),
+              ],
             ),
             Container(
-              width: 100.0,
-              color: Color(0xff2762D9),
-              padding: EdgeInsets.only(bottom: 25),
-              child: Image.asset('images/logo.png', width: 100.0,),
-            )
+              height: 180,
+              width: double.infinity,
+              padding: EdgeInsets.all(8),
+              margin: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Color(0xffff4400)),
+                borderRadius: BorderRadius.all(Radius.circular(4))
+              ),
+              child: SingleChildScrollView(
+                child: Text(_cardInfo),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _scanInfo = '扫码中...';
+                    });
+                    await FlutterHuashi.stopReadCard;
+                    Map<String, dynamic> result = await FlutterHuashi.openScanCode();
+                    print(result.toString());
+                    setState(() {
+                      _scanInfo = result.toString() ?? '扫码失败';
+                    });
+                  },
+                  child: Text('扫描二维码'),
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _scanInfo = '扫码中...';
+                    });
+                    await FlutterHuashi.stopReadCard;
+                    Map<String, dynamic> result = await FlutterHuashi.openScanCode(scanType: FlutterHuashi.ScanType.PAYCODE);
+                    print(result.toString());
+                    setState(() {
+                      _scanInfo = result.toString() ?? '扫码失败';
+                    });
+                  },
+                  child: Text('扫描付款码'),
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _scanInfo = '扫码中...';
+                    });
+                    await FlutterHuashi.stopReadCard;
+                    Map<String, dynamic> result = await FlutterHuashi.openScanCode(disableAudio: true);
+                    print(result.toString());
+                    setState(() {
+                      _scanInfo = result.toString() ?? '扫码失败';
+                    });
+                  },
+                  child: Text('静音扫描二维码'),
+                )
+              ],
+            ),
+            Container(
+              height: 180,
+              width: double.infinity,
+              padding: EdgeInsets.all(8),
+              margin: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  border: Border.all(color: Color(0xffff4400)),
+                  borderRadius: BorderRadius.all(Radius.circular(4))
+              ),
+              child: SingleChildScrollView(
+                child: Text(_scanInfo),
+              ),
+            ),
           ],
         ),
       ),

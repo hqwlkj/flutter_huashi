@@ -50,9 +50,7 @@ flutter:
   assets:
     - audios/
 #    - assets/audios/
-    - images/
-    - images/v2/
-    - images/v3/
+#    - images/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

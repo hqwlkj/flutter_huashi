@@ -13,8 +13,7 @@ import com.urovo.xbsdk.Function
 import com.urovo.xbsdk.IDCardReadCallBack
 import com.urovo.xbsdk.ScanCallBack
 import com.ysf.card.util.FastJsonUtil
-import com.ysf.card.util.ICallback
-import com.ysf.wxface.utils.WxFaceUtil
+import com.ysf.card.util.PlayerUtil
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -23,6 +22,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
+import kotlin.properties.Delegates
 
 
 /** FlutterHuashiPlugin */
@@ -39,6 +39,12 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private var responseHandler: HuaShiHandler? = null
+    /*
+    插件相关参数
+    */
+    private var disableAudio by Delegates.notNull<Boolean>() //是否禁用音频 默认为开启
+    private var scanType by Delegates.notNull<String>() //扫码类型，默认为扫码，可选参数为：payCode, qrCode
+
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "flutter_huashi")
@@ -61,7 +67,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         @JvmStatic
         fun registerWith(registrar: Registrar) {
             HuaShiHandler.setContext(registrar.activity())
-            HuaShiHandler.initDialog(registrar.activity())
             val channel = MethodChannel(registrar.messenger(), "flutter_huashi")
             HuaShiHandler.setMethodChannel(channel)
             channel.setMethodCallHandler(FlutterHuashiPlugin())
@@ -73,28 +78,14 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
             "getPlatformVersion" -> {
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             }
-            "initWxpayface" -> { // 初始化刷脸支付
-                initWxpayface(result)
-            }
-            "faceVerified" -> {
-                faceRecognition(result)
-            }
-            "wxFacePay" -> {
-                wxFacePay(result)
-            }
-            "releaseWxpayface" -> {
-                releaseWxpayface()
-            }
-            "showPayLoading" -> {
-                showDialog()
-            }
-            "hidePayLoading" -> {
-                hideDialog()
-            }
             "openCardInfo" -> {
+                disableAudio = call.argument<Boolean>("disableAudio")!!
                 openCard(result)
             }
             "openScanCode" -> {
+                disableAudio = call.argument<Boolean>("disableAudio")!!
+                scanType = call.argument<String>("scanType")!!
+                Log.e("scanType", scanType.toString())
                 openScanCode(result)
             }
             "stopScanCode" -> {
@@ -111,8 +102,14 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
 
 
     private fun openCard(@NonNull result: Result) {
+        if(!disableAudio){
+            PlayerUtil.readPlay(HuaShiHandler.getContext())
+        }
         Function.doReadIDCard(HuaShiHandler.getContext(), object : IDCardReadCallBack {
             override fun success(ic: HSIDCardInfo?) {
+                if(!disableAudio) {
+                    PlayerUtil.play(HuaShiHandler.getContext())
+                }
                 uiThreadHandler.post {
                     val params: MutableMap<String, Any> = HashMap()
                     params["data"] = FastJsonUtil.toJson(ic)
@@ -139,8 +136,18 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     }
 
     private fun openScanCode(@NonNull result: Result) {
+        if(!disableAudio){
+            if(scanType == "PAYCODE"){
+                PlayerUtil.scanPayCodePlay(HuaShiHandler.getContext())
+            }else{
+                PlayerUtil.scanCodePlay(HuaShiHandler.getContext())
+            }
+        }
         Function.doScanLoop(object : ScanCallBack {
             override fun success(data: String?) {
+                if(!disableAudio) {
+                    PlayerUtil.play(HuaShiHandler.getContext())
+                }
                 Function.stopScan() // 停止扫码
                 uiThreadHandler.post {
                     val params: MutableMap<String, Any> = HashMap()
@@ -175,54 +182,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
         result.success("SUCCESS")
     }
 
-    private fun showDialog() {
-        Log.i(tag, "showDialog" + HuaShiHandler.getContext())
-        HuaShiHandler.showDialog()
-    }
-
-    private fun hideDialog() {
-        Log.i(tag, "hideDialog" + HuaShiHandler.getContext())
-        HuaShiHandler.hideDialog()
-    }
-
-    private fun initWxpayface(@NonNull result: Result) {
-        WxFaceUtil.init(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-
-    private fun faceRecognition(@NonNull result: Result) {
-        WxFaceUtil.InfoVer(HuaShiHandler.getContext(), object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    private fun wxFacePay(@NonNull result: Result) {
-        WxFaceUtil.FacePay(HuaShiHandler.getContext(), "", object : ICallback {
-            override fun callback(params: MutableMap<String, Any>?) {
-                uiThreadHandler.post {
-                    result.success(params)
-                }
-            }
-        })
-    }
-
-    /**
-     * 释放微信刷脸
-     */
-    private fun releaseWxpayface() {
-        WxFaceUtil.releaseWxpayface(HuaShiHandler.getContext())
-    }
-
     //广播接收者
     class LocatiopnBroadcast : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -249,7 +208,6 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         HuaShiHandler.setContext(binding.activity);
-        HuaShiHandler.initDialog(binding.activity)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
