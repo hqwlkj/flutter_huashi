@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_huashi/src/enums/ScanType.dart';
 
 MethodChannel _channel = const MethodChannel('flutter_huashi')..setMethodCallHandler(_methodHandler);
 
@@ -15,9 +16,16 @@ Future<String> get platformVersion async {
   return version;
 }
 
+///
 /// 开启扫码
-Future<Map<String, dynamic>> openScanCode() async {
-  final Map<String, dynamic> result = await _channel.invokeMapMethod('openScanCode');
+/// disableAudio: 是否静音扫码
+/// scanType： 扫码类型，默认为扫码，可选参数为：payCode, qrCode
+///
+Future<Map<String, dynamic>> openScanCode({bool disableAudio, ScanType scanType}) async {
+  final Map<String, dynamic> result = await _channel.invokeMapMethod('openScanCode',{
+    'disableAudio': disableAudio ?? false,
+    'scanType': scanType == ScanType.PAYCODE ? 'PAYCODE' : 'QRCODE'
+  });
   return result;
 }
 
@@ -30,9 +38,14 @@ Future<String> get stopScanCode async{
 Future<String> get stopReadCard async{
   return await _channel.invokeMethod("stopReadCard");
 }
-/// 新的开始读卡
-Future<Map<String, dynamic>> openCardInfo() async {
-  final Map<String, dynamic> result = await _channel.invokeMapMethod('openCardInfo');
+///
+/// 开始读卡
+/// disableAudio: 是否静音读卡
+///
+Future<Map<String, dynamic>> openCardInfo({bool disableAudio}) async {
+  final Map<String, dynamic> result = await _channel.invokeMapMethod('openCardInfo', {
+    'disableAudio': disableAudio ?? false
+  });
   return result;
 }
 

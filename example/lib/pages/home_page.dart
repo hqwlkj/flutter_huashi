@@ -62,19 +62,38 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             Text(_platformVersion),
-            OutlinedButton(
-              onPressed: () async {
-                setState(() {
-                  _cardInfo = '读取中...';
-                });
-                await FlutterHuashi.stopScanCode;
-                Map<String, dynamic> result = await FlutterHuashi.openCardInfo();
-                print(result.toString());
-                setState(() {
-                  _cardInfo = result.toString() ?? '读取失败';
-                });
-              },
-              child: Text('读取身份证'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _cardInfo = '读取中...';
+                    });
+                    await FlutterHuashi.stopScanCode;
+                    Map<String, dynamic> result = await FlutterHuashi.openCardInfo();
+                    print(result.toString());
+                    setState(() {
+                      _cardInfo = result.toString() ?? '读取失败';
+                    });
+                  },
+                  child: Text('读取身份证'),
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _cardInfo = '读取中...';
+                    });
+                    await FlutterHuashi.stopScanCode;
+                    Map<String, dynamic> result = await FlutterHuashi.openCardInfo(disableAudio: true);
+                    print(result.toString());
+                    setState(() {
+                      _cardInfo = result.toString() ?? '读取失败';
+                    });
+                  },
+                  child: Text('静音读取身份证'),
+                ),
+              ],
             ),
             Container(
               height: 180,
@@ -89,19 +108,52 @@ class _HomePageState extends State<HomePage> {
                 child: Text(_cardInfo),
               ),
             ),
-            OutlinedButton(
-              onPressed: () async {
-                setState(() {
-                  _scanInfo = '扫码中...';
-                });
-                await FlutterHuashi.stopReadCard;
-                Map<String, dynamic> result = await FlutterHuashi.openScanCode();
-                print(result.toString());
-                setState(() {
-                  _scanInfo = result.toString() ?? '扫码失败';
-                });
-              },
-              child: Text('扫描二维码'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _scanInfo = '扫码中...';
+                    });
+                    await FlutterHuashi.stopReadCard;
+                    Map<String, dynamic> result = await FlutterHuashi.openScanCode();
+                    print(result.toString());
+                    setState(() {
+                      _scanInfo = result.toString() ?? '扫码失败';
+                    });
+                  },
+                  child: Text('扫描二维码'),
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _scanInfo = '扫码中...';
+                    });
+                    await FlutterHuashi.stopReadCard;
+                    Map<String, dynamic> result = await FlutterHuashi.openScanCode(scanType: FlutterHuashi.ScanType.PAYCODE);
+                    print(result.toString());
+                    setState(() {
+                      _scanInfo = result.toString() ?? '扫码失败';
+                    });
+                  },
+                  child: Text('扫描付款码'),
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    setState(() {
+                      _scanInfo = '扫码中...';
+                    });
+                    await FlutterHuashi.stopReadCard;
+                    Map<String, dynamic> result = await FlutterHuashi.openScanCode(disableAudio: true);
+                    print(result.toString());
+                    setState(() {
+                      _scanInfo = result.toString() ?? '扫码失败';
+                    });
+                  },
+                  child: Text('静音扫描二维码'),
+                )
+              ],
             ),
             Container(
               height: 180,
