@@ -10,6 +10,7 @@ import 'package:flutter_huashi_example/services/home_service.dart';
 import 'package:flutter_huashi_example/utils/net_utils.dart';
 import 'package:flutter_huashi_example/utils/utils.dart';
 import 'package:flutter_huashi_example/widgets/loading.dart';
+import 'package:wechat_face_payment/wechat_face_payment.dart';
 import 'result_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -118,7 +119,7 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> readCardInfo(BuildContext context) async {
     await audioCache.play('audios/read-card.mp3'); // 播报音频
-    Map<String, dynamic> map = await FlutterHuashi.openCardInfo();
+    Map<String, dynamic> map = await FlutterHuashi.openCardInfo(disableAudio: true);
     LogUtil.e(map);
     if (map['code'] == 'SUCCESS') {
       CardInfoModel model =
@@ -137,7 +138,7 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> scanCodeInfo(BuildContext context) async {
     await audioCache.play('audios/scan-code.mp3'); // 播报音频
-    Map<String, dynamic> result = await FlutterHuashi.openScanCode();
+    Map<String, dynamic> result = await FlutterHuashi.openScanCode(disableAudio: true);
     LogUtil.e(result, tag: 'openScanCode:');
     if (result['code'] == 'SUCCESS') {
       LogUtil.e(result['data'], tag: 'result=>1:');
@@ -166,10 +167,10 @@ class _HomePageState extends State<HomePage> {
     await audioCache.play('audios/face.mp3'); // 播报音频
     await FlutterHuashi.stopScanCode; // 先停止扫码
     await FlutterHuashi.stopReadCard; // 先停止读卡
-    Map<String, dynamic> result = await FlutterHuashi.initWxFace();
-    LogUtil.e(result['code'], tag: 'initWxFace =>  result:');
+    WechatFacePayment result = await WechatFacePayment.initFacePay("wx34aa1d8ffa545b06", "1506994921", "123455", "http://parsec.cqkqinfo.com/app/stage-exhibition-api/face");
+    LogUtil.e(result, tag: 'initWxFace =>  result:');
     Loading.hideLoading(context);
-    Map<String, dynamic> result2 = await FlutterHuashi.wxFaceVerify();
+    Map<String, dynamic> result2 = await WechatFacePayment.wxFaceVerify();
     Loading.showLoading(context, text: '认证中,请稍候...' ,fontSize: 12);
     if (result2['code'] == 'SUCCESS') {
       Map<String, dynamic> resultMap =

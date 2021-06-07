@@ -58,6 +58,7 @@ class _HomePageState extends State<HomePage> {
     audioCache.clearCache();
     FlutterHuashi.stopReadCard;
     FlutterHuashi.stopScanCode;
+    WechatFacePayment.releaseWxPayFace;
     LogUtil.e('dispose', tag: 'dispose');
     super.dispose();
   }
@@ -116,7 +117,7 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> readCardInfo(BuildContext context) async {
     await audioCache.play('audios/read-card.mp3'); // 播报音频
-    Map<String, dynamic> map = await FlutterHuashi.openCardInfo();
+    Map<String, dynamic> map = await FlutterHuashi.openCardInfo(disableAudio: true);
     LogUtil.e(map,tag:'idcard');
     if (map['code'] == 'SUCCESS') {
       CardInfoModel model =
@@ -135,7 +136,7 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> scanCodeInfo(BuildContext context) async {
     await audioCache.play('audios/scan-code.mp3'); // 播报音频
-    Map<String, dynamic> result = await FlutterHuashi.openScanCode();
+    Map<String, dynamic> result = await FlutterHuashi.openScanCode(disableAudio: true);
     LogUtil.e(result, tag: 'openScanCode:');
     if (result['code'] == 'SUCCESS') {
       LogUtil.e(result['data'], tag: 'result=>1:');
