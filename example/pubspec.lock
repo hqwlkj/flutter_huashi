@@ -208,7 +208,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.0.0"
+    version: "1.0.1"
   flutter_spinkit:
     dependency: "direct main"
     description:
@@ -539,6 +539,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.9.7+15"
+  wechat_face_payment:
+    dependency: "direct main"
+    description:
+      name: wechat_face_payment
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.0.6+2"
   win32:
     dependency: transitive
     description:
