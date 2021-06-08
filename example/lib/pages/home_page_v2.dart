@@ -66,7 +66,7 @@ class _NewHomePageState extends State<NewHomePage> {
   @override
   void dispose() {
     if (_type == 'scan') {
-      FlutterHuashi.closeScanCode;
+      FlutterHuashi.stopScanCode;
     }
     LogUtil.e('object', tag: 'dispose');
     super.dispose();
@@ -105,20 +105,17 @@ class _NewHomePageState extends State<NewHomePage> {
   ///
   Future<void> readCardInfo() async {
     await audioCache.play('audios/read-card.mp3'); // 播报音频
-    String result = await FlutterHuashi.initCard;
-    print('82:result: $result');
-    if (result == 'SUCCESS') {
-      Map<String, dynamic> map = await FlutterHuashi.openAutoCard;
-      if (map['code'] == 'SUCCESS') {
-        CardInfoModel model =
-        JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
-        print('peopleName:${model.peopleName}');
-        print('iDCard:${model.iDCard}');
-        checkHealth(context, _type, model.iDCard, username: model.peopleName);
-      } else {
-        Utils.showToast('身份证读取失败，请稍后重试...');
-        readCardInfo();
-      }
+    Map<String, dynamic> map = await FlutterHuashi.openCardInfo(disableAudio: true);
+    LogUtil.e(map);
+    if (map['code'] == 'SUCCESS') {
+      CardInfoModel model =
+      JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
+      print('peopleName:${model.peopleName}');
+      print('iDCard:${model.iDCard}');
+      checkHealth(context, _type, model.iDCard, username: model.peopleName);
+    } else {
+      Utils.showToast('身份证读取失败，请稍后重试...');
+      readCardInfo();
     }
   }
 
@@ -128,9 +125,9 @@ class _NewHomePageState extends State<NewHomePage> {
   ///
   Future<void> scanCodeInfo() async {
     await audioCache.play('audios/scan-code.mp3'); // 播报音频
-    Map<String, dynamic> result = await FlutterHuashi.scanCode;
+    Map<String, dynamic> result = await FlutterHuashi.openScanCode(disableAudio: true);
     print('100:result: $result');
-    await FlutterHuashi.closeScanCode;
+    await FlutterHuashi.stopScanCode;
     if (result['code'] == 'SUCCESS') {
       Map<String, dynamic> resultMap = JsonUtil.getObject(result['data'], (v) => Map.of(v));
       checkHealth(context, _type, resultMap['codeId'], json: result['data']);

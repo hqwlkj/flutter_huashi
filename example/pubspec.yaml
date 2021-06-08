@@ -6,7 +6,7 @@ description: Demonstrates how to use the flutter_huashi plugin.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: '>=2.7.0 <3.0.0'
 
 dependencies:
   flutter:
@@ -55,6 +55,7 @@ flutter:
     - images/v2/
     - images/v3/
     - images/v5/
+    - images/v6/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

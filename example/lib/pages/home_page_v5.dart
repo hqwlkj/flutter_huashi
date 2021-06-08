@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _type = 'card';
     _title = '识别身份证'; // 识别身份证 & 识别二维码
-    _subtitle = '请将手机渝康码放置感应区';
+    _subtitle = '请将本人身份证放置感应区';
     _currentBtn = [
       {"type": 'scan', "url": 'images/$_uiVersion/scan-code.png'},
     ];
@@ -82,6 +82,7 @@ class _HomePageState extends State<HomePage> {
           _type = 'card';
           _currentBg = 'images/$_uiVersion/read-card-bg.png';
           _title = '识别身份证'; // 识别身份证 & 识别二维码
+          _subtitle = '请将本人身份证放置感应区';
           _currentBtn = [
             {"type": 'scan', "url": 'images/$_uiVersion/scan-code.png'}
           ];
@@ -191,13 +192,10 @@ class _HomePageState extends State<HomePage> {
     Map<String, dynamic> result2 = await WechatFacePayment.wxFaceVerify();
     Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 12);
     if (result2['code'] == 'SUCCESS') {
-      Map<String, dynamic> resultMap =
-          JsonUtil.getObject(result2['data'], (v) => Map.of(v));
-      Response authUser =
-          await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
+      Map<String, dynamic> resultMap = JsonUtil.getObject(result2['data'], (v) => Map.of(v));
+      Response authUser = await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
       if (authUser.statusCode == 200) {
-        checkHealth(context, 'face', authUser.data['credential_no'],
-            username: authUser.data['real_name']);
+        checkHealth(context, 'face', authUser.data['credential_id'], username: authUser.data['real_name']);
       }
     } else {
       Loading.hideLoading(context);
@@ -279,27 +277,16 @@ class _HomePageState extends State<HomePage> {
         }
       });
     } else {
-      HomeService.checkHealthByCodeId(context, params: {"codeId": code})
-          .then((response) async {
-        Response nameResponse = await HomeService.queryNameByQrcode(context,
-            params: {"qrcode": json});
+      HomeService.checkHealthByCodeId(context, params: {"codeId": code}).then((response) async {
+        Response nameResponse = await HomeService.queryNameByQrcode(context, params: {"qrcode": json});
         LogUtil.e(nameResponse?.statusCode, tag: 'nameResponse');
         _count += 1;
         Loading.hideLoading(context);
-        if (response == null ||
-            response?.statusCode != 200 ||
-            response?.data['result'].toString() == '2' ||
-            nameResponse?.statusCode != 200) {
+        if (response == null || response?.statusCode != 200 || response?.data['data'].toString() == '2' || nameResponse?.statusCode != 200) {
           Utils.showToast('渝康码识别失败，请稍后重试...');
           scanCodeInfo(context);
         } else {
-          Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      builder: (context) => new ResultPage(
-                          type: _type,
-                          username: nameResponse.data['name'] ?? '',
-                          result: response.data['result'].toString())))
+          Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: _type, username: nameResponse.data['name'] ?? '', result: response.data['data'].toString())))
               .then((value) {
             scanCodeInfo(context);
           });

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'pages/result_page.dart';
 
-import 'pages/home_page_v5.dart';
+import 'pages/home_page_v6.dart';
 
 void main() {
   if (Platform.isAndroid) {

@@ -96,7 +96,12 @@ class _ResultPageState extends State<ResultPage> {
           actions: [
             FlatButton(
               onPressed: (){
-                Navigator.pop(context);
+                if(seconds > 0){
+                  // Navigator.pop(context);
+                  // _cancelTimer();
+                } else {
+                  LogUtil.e('====================');
+                }
               },
               child: Container(
                   alignment: Alignment.center,
