@@ -19,6 +19,8 @@ dependencies:
   cached_network_image: ^2.0.0
   fluttertoast: ^7.1.1
   flutter_spinkit: ^4.1.2+1
+  flutter_chs: ^0.0.2
+  flutter_screenutil: ^5.0.0+2
   flutter_huashi:
     # When depending on this package from a real application you should use:
     #   flutter_huashi: ^x.y.z

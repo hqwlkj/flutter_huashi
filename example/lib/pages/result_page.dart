@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:common_utils/common_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_huashi_example/widgets/v_empty_view.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 
 ///
@@ -87,14 +88,14 @@ class _ResultPageState extends State<ResultPage> {
   Widget build(BuildContext context) {
     Color _globalColor =
     widget.result == '0' ? Color(0xff03b75a) : Color(0xffeb4141);
-    String _username = widget.username ?? '';
+    String _username = widget.username?.trim() ?? '';
     return Scaffold(
       backgroundColor: _globalColor,
       appBar: AppBar(
           title: Text(_getPageTitle()),
           elevation: 0,
           actions: [
-            FlatButton(
+            TextButton(
               onPressed: (){
                 Navigator.pop(context);
               },
@@ -125,7 +126,7 @@ class _ResultPageState extends State<ResultPage> {
                       widget.result == '0'
                           ? 'images/success.png'
                           : 'images/error.png',
-                      width: 120.0,
+                      width: ScreenUtil().setWidth(120.0),
                     ),
                   ),
                   Positioned(
@@ -136,9 +137,10 @@ class _ResultPageState extends State<ResultPage> {
                           start: _username.length >= 3 ? 1 : 0,
                           end: _username.length - 1,
                           replacement: "*" * (_username.length >= 3 ? 1 : 2)),
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           color: _globalColor,
-                          fontSize: 28,
+                          fontSize: ScreenUtil().setSp(28),
                           fontWeight: FontWeight.bold,
                           letterSpacing: 3),
                     ),
@@ -148,9 +150,10 @@ class _ResultPageState extends State<ResultPage> {
                     left: 120,
                     child: Text(
                       "健康码状态：${widget.result == '0' ? '健康' : '异常'}",
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           color: _globalColor,
-                          fontSize: 20,
+                          fontSize: ScreenUtil().setSp(24),
                           fontWeight: FontWeight.w500),
                     ),
                   ),
@@ -160,13 +163,15 @@ class _ResultPageState extends State<ResultPage> {
                     child: Column(
                       children: [
                         Text('更新于',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: _globalColor,
-                                fontSize: 16,
+                                fontSize: ScreenUtil().setSp(18),
                                 fontWeight: FontWeight.w400)),
                         VEmptyView(5),
                         Text(
                             _upTime,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: _globalColor,
                                 fontSize: 16,

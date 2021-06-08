@@ -5,8 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:common_utils/common_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_huashi/flutter_huashi.dart' as FlutterHuashi;
-import 'package:flutter_huashi/flutter_huashi.dart';
+import 'package:flutter_chs/flutter_chs.dart';
 import 'package:wechat_face_payment/wechat_face_payment.dart';
 import 'package:flutter_huashi_example/services/home_service.dart';
 import 'package:flutter_huashi_example/utils/net_utils.dart';
@@ -21,7 +20,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  StreamSubscription<Map> _flutterHuashi;
 
   // 音频播放
   AudioCache audioCache = AudioCache(prefix: '', fixedPlayer: AudioPlayer());
@@ -29,10 +27,7 @@ class _HomePageState extends State<HomePage> {
   String _title = '';
   String _subtitle = '';
   String _currentBg = '';
-
-  List<Map<String, dynamic>> _currentBtn = [];
-  int _count = 0;
-  String _uiVersion = 'v5';
+  String _uiVersion = 'v5'; // UI版本号
 
   @override
   void initState() {
@@ -41,12 +36,9 @@ class _HomePageState extends State<HomePage> {
     _type = 'card';
     _title = '识别身份证'; // 识别身份证 & 识别二维码
     _subtitle = '请将手机渝康码放置感应区';
-    _currentBtn = [
-      {"type": 'scan', "url": 'images/$_uiVersion/scan-code.png'},
-    ];
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       LogUtil.e('addPostFrameCallback', tag: 'addPostFrameCallback');
-      readCardInfo(context);
+      multiFunctionCertification(context);
     });
   }
 
@@ -61,14 +53,39 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _flutterHuashi?.cancel();
     audioCache.disableLog();
     audioCache.clearCache();
-    FlutterHuashi.stopReadCard;
-    FlutterHuashi.stopScanCode;
+    FlutterChs.closeDevice;
     WechatFacePayment.releaseWxPayFace;
     LogUtil.e('dispose', tag: 'dispose');
     super.dispose();
+  }
+
+
+  /// 多功能识别
+  void multiFunctionCertification(BuildContext context) async {
+    Map<String, dynamic> result = await FlutterChs.openReadDevice(timeout: 24 * 60 * 60);
+    LogUtil.e(result);
+    if(result['code'] == 0){
+      Map<String, dynamic> data = JsonUtil.getObj(result['data'], (v) => Map.of(v));
+      LogUtil.e(data);
+      LogUtil.e(data['type']);
+      if(data['type'] == 'IDCARD'){
+        checkHealth(context, data['type'], data['id_number'], username: data['name']);
+      }
+      if(data['type'] == 'SCAN'){
+        // {"barcode":"{\"codeId\":\"1622e0f1383a01b6792048d569d3faf9\",\"lastReportTime\":1617768110000,\"outTime\":9999999999999,\"zoning\":\"500000\"}","type":"SCAN"}}
+        Map<String, dynamic> _data = JsonUtil.getObj(data['barcode'], (v) => Map.of(v));
+        LogUtil.e(_data);
+        checkHealth(context, data['type'], _data['codeId'], json: data['barcode']);
+      }
+      if(data['type'] == 'HEALTHCARD'){
+        checkHealth(context, data['type'], data['idCardNo'], username: data['name']);
+      }
+    }else{
+      Utils.showToast(result['message'] ?? '识别失败，请稍后重试...');
+      multiFunctionCertification(context);
+    }
   }
 
   ///
@@ -76,105 +93,24 @@ class _HomePageState extends State<HomePage> {
   ///
   void handleSwitch(BuildContext context, String type) async {
     Loading.showLoading(context, text: '初始化中...');
-    switch (type) {
-      case 'card':
-        setState(() {
-          _type = 'card';
-          _currentBg = 'images/$_uiVersion/read-card-bg.png';
-          _title = '识别身份证'; // 识别身份证 & 识别二维码
-          _currentBtn = [
-            {"type": 'scan', "url": 'images/$_uiVersion/scan-code.png'}
-          ];
-        });
-        Future.delayed(Duration(milliseconds: 1000), () {
-          readCardInfo(context);
-          Loading.hideLoading(context);
-        });
-        break;
-      case 'scan':
-        setState(() {
-          _type = 'scan';
-          _title = '识别二维码'; // 识别身份证 & 识别二维码
-          _subtitle = '请将手机渝康码放置感应区';
-          _currentBg = 'images/$_uiVersion/scan-code-bg.png';
-          _currentBtn = [
-            {"type": 'card', "url": 'images/$_uiVersion/read-card.png'}
-          ];
-        });
-        Future.delayed(Duration(milliseconds: 1000), () {
-          Loading.hideLoading(context);
-          scanCodeInfo(context);
-        });
-        break;
-      case 'face':
-        setState(() {
-          _type = 'face';
-          _title = '人脸识别'; // 识别身份证 & 识别二维码 & 人脸识别
-          _subtitle = '请面向屏幕开始刷脸';
-          _currentBg = 'images/$_uiVersion/face-bg.png';
-          _currentBtn = [
-            {"type": 'card', "url": 'images/$_uiVersion/read-card.png'},
-            {"type": 'scan', "url": 'images/$_uiVersion/scan-code-right-btn.png'}
-          ];
-        });
-        faceInfo(context);
-        break;
-      default:
-        Utils.showToast('别点了，没有你想去的地方');
-        break;
-    }
-  }
-
-  ///
-  /// 读取身份证信息进行健康认证
-  ///
-  Future<void> readCardInfo(BuildContext context) async {
-    await audioCache.play('audios/read-card.mp3'); // 播报音频
-    Map<String, dynamic> map = await FlutterHuashi.openCardInfo(disableAudio: true);
-    LogUtil.e(map, tag: 'idcard');
-    if (map['code'] == 'SUCCESS') {
-      CardInfoModel model =
-          JsonUtil.getObject(map['data'], (v) => CardInfoModel.fromJson(v));
-      print('peopleName:${model.peopleName}');
-      print('iDCard:${model.iDCard}');
-      if(model.iDCard != null){
-        checkHealth(context, _type, model.iDCard, username: model.peopleName);
-      }else{
-        Utils.showToast('身份证读取失败，请稍后重试...');
-        readCardInfo(context);
-      }
+    if(type == 'face'){
+      setState(() {
+        _type = 'face';
+        _title = '人脸识别'; // 识别身份证 & 识别二维码 & 人脸识别
+        _subtitle = '请面向屏幕开始刷脸';
+        _currentBg = 'images/$_uiVersion/face-bg.png';
+      });
+      faceInfo(context);
     } else {
-      Utils.showToast('身份证读取失败，请稍后重试...');
-      readCardInfo(context);
-    }
-  }
-
-  ///
-  /// 扫描渝康码信息进行健康认证
-  ///
-  Future<void> scanCodeInfo(BuildContext context) async {
-    await audioCache.play('audios/scan-code.mp3'); // 播报音频
-    Map<String, dynamic> result = await FlutterHuashi.openScanCode(disableAudio: true);
-    LogUtil.e(result, tag: 'openScanCode:');
-    if (result['code'] == 'SUCCESS') {
-      LogUtil.e(result['data'], tag: 'result=>1:');
-      if (result['data'].toString().indexOf('codeId') < 0) {
-        Utils.showToast(result['messages'] ?? '请出示正常的渝康码信息');
-        scanCodeInfo(context);
-      } else {
-        if (result['data'].toString().indexOf("{{") > -1) {
-          result['data'] = result['data']
-              .toString()
-              .substring(1, result['data'].toString().length);
-        }
-        LogUtil.e(result['data'], tag: 'result=>2:');
-        Map<String, dynamic> resultMap =
-            JsonUtil.getObject(result['data'], (v) => Map.of(v));
-        checkHealth(context, _type, resultMap['codeId'], json: result['data']);
-      }
-    } else {
-      Utils.showToast(result['messages'] ?? '渝康码识别失败，请稍后重试...');
-      scanCodeInfo(context);
+      setState(() {
+        _type = 'card';
+        _currentBg = 'images/$_uiVersion/read-card-bg.png';
+        _title = '识别身份证'; // 识别身份证 & 识别二维码
+      });
+      Future.delayed(Duration(milliseconds: 1000), () {
+        multiFunctionCertification(context);
+        Loading.hideLoading(context);
+      });
     }
   }
 
@@ -183,8 +119,7 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> faceInfo(BuildContext context) async {
     await audioCache.play('audios/face.mp3'); // 播报音频
-    await FlutterHuashi.stopScanCode; // 先停止扫码
-    await FlutterHuashi.stopReadCard; // 先停止读卡
+    await FlutterChs.closeDevice; // 先停止多功能功能
     WechatFacePayment result = await WechatFacePayment.initFacePay("wx34aa1d8ffa545b06", "1506994921", "123455", "http://parsec.cqkqinfo.com/app/stage-exhibition-api/face");
     LogUtil.e(result, tag: 'initWxFace =>  result:');
     Loading.hideLoading(context);
@@ -214,17 +149,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> checkHealth(BuildContext context, String type, String code,
       {String json, String username}) async {
     Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 12);
-    if (type == 'card' || type == 'face') {
+    if (type == 'IDCARD' || type == 'HEALTHCARD' || type == 'face') {
       HomeService.checkHealthByCardNo(context, params: {"cardNo": code})
           .then((response) {
         Loading.hideLoading(context);
         LogUtil.e(response, tag: '我是返回的：response=>');
-        if (response == null ||
-            response?.statusCode != 200 ||
-            response?.data['data'].toString() == '2') {
-          if (type == 'card') {
-            Utils.showToast('身份证认证失败，请稍后重试...');
-            readCardInfo(context);
+        if (response == null || response?.statusCode != 200 || response?.data['data'].toString() == '2') {
+          if (type == 'IDCARD' || type == 'HEALTHCARD') {
+            Utils.showToast(type == 'IDCARD' ? '身份证认证失败，请稍后重试...' : '社保卡认证失败，请稍后重试...');
+            multiFunctionCertification(context);
           } else {
             Utils.showToast('人脸认证失败，请稍后重试...');
             audioCache.play('audios/face-repeat.mp3'); // 播报音频
@@ -234,16 +167,9 @@ class _HomePageState extends State<HomePage> {
           }
         } else {
           if (response?.data['errcode'] == 0) {
-            Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                        builder: (context) => new ResultPage(
-                            type: _type,
-                            username: username,
-                            result: response.data['data'].toString())))
-                .then((value) {
-              if (type == 'card') {
-                readCardInfo(context);
+            Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: _type, username: username, result: response.data['data'].toString()))).then((value) {
+              if (type == 'IDCARD' || type == 'HEALTHCARD') {
+                multiFunctionCertification(context);
               } else {
                 audioCache.play('audios/face-repeat.mp3'); // 播报音频
                 setState(() {
@@ -254,7 +180,7 @@ class _HomePageState extends State<HomePage> {
           } else {
             if (type == 'card') {
               Utils.showToast(response?.data['errmsg']);
-              readCardInfo(context);
+              multiFunctionCertification(context);
             } else {
               Utils.showToast('人脸认证失败，请稍后重试...');
               audioCache.play('audios/face-repeat.mp3'); // 播报音频
@@ -267,47 +193,34 @@ class _HomePageState extends State<HomePage> {
       }).catchError((e) {
         Loading.hideLoading(context);
         LogUtil.e(e, tag: 'onError');
-        if (type == 'card') {
-          Utils.showToast('身份证认证超时，请重新识别...');
-          readCardInfo(context);
-        } else {
+        if (type == 'face') {
           Utils.showToast('人脸认证超时，请稍后重试...');
           audioCache.play('audios/face-repeat.mp3'); // 播报音频
           setState(() {
             _currentBg = 'images/$_uiVersion/face-repeat-bg.png';
           });
+        } else {
+          Utils.showToast('身份证认证超时，请重新识别...');
+          multiFunctionCertification(context);
         }
       });
     } else {
-      HomeService.checkHealthByCodeId(context, params: {"codeId": code})
-          .then((response) async {
-        Response nameResponse = await HomeService.queryNameByQrcode(context,
-            params: {"qrcode": json});
+      HomeService.checkHealthByCodeId(context, params: {"codeId": code}).then((response) async {
+        Response nameResponse = await HomeService.queryNameByQrcode(context, params: {"qrcode": json});
         LogUtil.e(nameResponse?.statusCode, tag: 'nameResponse');
-        _count += 1;
         Loading.hideLoading(context);
-        if (response == null ||
-            response?.statusCode != 200 ||
-            response?.data['result'].toString() == '2' ||
-            nameResponse?.statusCode != 200) {
+        if (response == null || response?.statusCode != 200 || response?.data['result'].toString() == '2' || nameResponse?.statusCode != 200) {
           Utils.showToast('渝康码识别失败，请稍后重试...');
-          scanCodeInfo(context);
+          multiFunctionCertification(context);
         } else {
-          Navigator.push(
-                  context,
-                  new MaterialPageRoute(
-                      builder: (context) => new ResultPage(
-                          type: _type,
-                          username: nameResponse.data['name'] ?? '',
-                          result: response.data['result'].toString())))
-              .then((value) {
-            scanCodeInfo(context);
+          Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: _type, username: nameResponse.data['name'] ?? '', result: response.data['result'].toString()))).then((value) {
+            multiFunctionCertification(context);
           });
         }
       }).catchError((e) {
         Loading.hideLoading(context);
         Utils.showToast('渝康码认证超时，请重新扫码...');
-        scanCodeInfo(context);
+        multiFunctionCertification(context);
       });
     }
   }
@@ -315,11 +228,18 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     NetUtils.init();
+    print(MediaQuery.of(context).size.width);
+    print(MediaQuery.of(context).size.height);
     return Scaffold(
         appBar: AppBar(
           title: Text(_title),
           backgroundColor: Color(0xff2762D9),
           elevation: 0,
+          actions: [
+            TextButton(onPressed: (){
+              handleSwitch(context, 'face');
+            }, child: Text('面部签到'))
+          ],
         ),
         body: Container(
           width: double.infinity,
@@ -344,7 +264,7 @@ class _HomePageState extends State<HomePage> {
                 right: 0,
                 child: Container(
                   width: double.infinity,
-                  child: Image.asset(_type == 'card' ? 'images/v5/read-card-bg.png' : 'images/v5/scan-code-bg.png', width: 650, fit: BoxFit.cover),
+                  child: Image.asset(_currentBg, width: 650, fit: BoxFit.cover),
                 ),
               ),
               Positioned(
@@ -394,7 +314,7 @@ class _HomePageState extends State<HomePage> {
     if (_type == 'card') {
       return TextButton(
         onPressed: () {
-          handleSwitch(context, 'scan');
+          handleSwitch(context, 'face');
         },
         style: ButtonStyle(backgroundColor:
         MaterialStateProperty.resolveWith((states) {
@@ -403,7 +323,7 @@ class _HomePageState extends State<HomePage> {
           }
           return Color(0xff2762DA);
         })),
-        child: Text('扫描渝康码',style: TextStyle(
+        child: Text('面部签到',style: TextStyle(
             fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold
         )),
       );
@@ -419,7 +339,7 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           handleSwitch(context, 'card');
         },
-        child: Text('识别身份证', style: TextStyle(
+        child: Text('多功能签到', style: TextStyle(
             fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold
         )),
       );
