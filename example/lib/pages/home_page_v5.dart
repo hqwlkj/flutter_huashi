@@ -170,25 +170,25 @@ class _HomePageState extends State<HomePage> {
         } else {
           if (response?.data['errcode'] == 0) {
             Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: _type, username: username, result: response.data['data'].toString()))).then((value) {
-              if (type == 'IDCARD' || type == 'HEALTHCARD') {
-                multiFunctionCertification(context);
-              } else {
+              if (type == 'face') {
                 audioCache.play('audios/face-repeat.mp3'); // 播报音频
                 setState(() {
                   _currentBg = 'images/$_uiVersion/face-repeat-bg.png';
                 });
+              } else {
+                multiFunctionCertification(context);
               }
             });
           } else {
-            if (type == 'card') {
-              Utils.showToast(response?.data['errmsg']);
-              multiFunctionCertification(context);
-            } else {
-              Utils.showToast('人脸认证失败，请稍后重试...');
+            if (type == 'face') {
+              Utils.showToast('人脸认证超时，请稍后重试...');
               audioCache.play('audios/face-repeat.mp3'); // 播报音频
               setState(() {
                 _currentBg = 'images/$_uiVersion/face-repeat-bg.png';
               });
+            } else {
+              Utils.showToast('身份证认证超时，请重新识别...');
+              multiFunctionCertification(context);
             }
           }
         }

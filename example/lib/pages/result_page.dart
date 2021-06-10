@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_huashi_example/widgets/v_empty_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
 ///
 /// 认证结果
 ///
@@ -28,12 +27,15 @@ class _ResultPageState extends State<ResultPage> {
   Timer _timer;
   int seconds;
   String _upTime;
+
   @override
   void initState() {
     super.initState();
+
     /// 获取总秒数
     seconds = 2;
-    _upTime='${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day} ${DateTime.now().hour}:${DateTime.now().minute < 10 ? '0${DateTime.now().minute}' : DateTime.now().minute}:${DateTime.now().second}';
+    _upTime =
+        '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day} ${DateTime.now().hour}:${DateTime.now().minute < 10 ? '0${DateTime.now().minute}' : DateTime.now().minute}:${DateTime.now().second}';
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _startTimer();
       if (widget.result == "0") {
@@ -43,6 +45,7 @@ class _ResultPageState extends State<ResultPage> {
       }
     });
   }
+
   void _startTimer() {
     ///设置 1 秒回调一次
     const period = const Duration(seconds: 1);
@@ -74,20 +77,18 @@ class _ResultPageState extends State<ResultPage> {
     super.dispose();
   }
 
-  String _getPageTitle(){
-    if(widget.type == 'card'){
-      return '身份证认证';
-    }else if(widget.type == 'scan'){
+  String _getPageTitle() {
+    if (widget.type == 'SCAN') {
       return '渝康码认证';
-    }else{
-      return '人脸识别认证';
+    } else {
+      return '身份证信息认证';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     Color _globalColor =
-    widget.result == '0' ? Color(0xff03b75a) : Color(0xffeb4141);
+        widget.result == '0' ? Color(0xff03b75a) : Color(0xffeb4141);
     String _username = widget.username?.trim() ?? '';
     return Scaffold(
       backgroundColor: _globalColor,
@@ -96,7 +97,7 @@ class _ResultPageState extends State<ResultPage> {
           elevation: 0,
           actions: [
             TextButton(
-              onPressed: (){
+              onPressed: () {
                 // Navigator.pop(context);
               },
               child: Container(
@@ -105,10 +106,14 @@ class _ResultPageState extends State<ResultPage> {
                   padding: EdgeInsets.symmetric(horizontal: 15),
                   decoration: BoxDecoration(
                       color: Colors.black12,
-                      borderRadius: BorderRadius.all(Radius.circular(10.0))
-                  ),
-                  child: Text('关闭 ${seconds ?? 0}', style: TextStyle(fontWeight: FontWeight.w300,fontSize: 12, color: Colors.white),)
-              ),
+                      borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                  child: Text(
+                    '关闭 ${seconds ?? 0}',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w300,
+                        fontSize: 12,
+                        color: Colors.white),
+                  )),
             )
           ],
           backgroundColor: _globalColor),
@@ -117,79 +122,80 @@ class _ResultPageState extends State<ResultPage> {
           VEmptyView(20),
           Expanded(
               child: Stack(
-                children: [
-                  Center(
-                    child: Image.asset('images/result-bg.png'),
-                  ),
-                  Center(
-                    child: Image.asset(
-                      widget.result == '0'
-                          ? 'images/success.png'
-                          : 'images/error.png',
-                      width: ScreenUtil().setWidth(240.0),
-                    ),
-                  ),
-                  Positioned(
-                    top: ScreenUtil().setWidth(100),
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Text(
-                        TextUtil.hideNumber(_username,
+            children: [
+              Center(
+                child: Image.asset('images/result-bg.png'),
+              ),
+              Center(
+                child: Image.asset(
+                  widget.result == '0'
+                      ? 'images/success.png'
+                      : 'images/error.png',
+                  width: ScreenUtil().setWidth(240.0),
+                ),
+              ),
+              Positioned(
+                top: ScreenUtil().setWidth(100),
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    widget.type == 'SCAN'
+                        ? _username
+                        : TextUtil.hideNumber(_username,
                             start: _username.length >= 3 ? 1 : 0,
                             end: _username.length - 1,
                             replacement: "*" * (_username.length >= 3 ? 1 : 2)),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: _globalColor,
-                            fontSize: ScreenUtil().setSp(48),
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 3),
-                      ),
-                    ),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: _globalColor,
+                        fontSize: ScreenUtil().setSp(48),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 3),
                   ),
-                  Positioned(
-                    top: ScreenUtil().setWidth(180),
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Text(
-                        "健康码状态：${widget.result == '0' ? '健康' : '异常'}",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: _globalColor,
-                            fontSize: ScreenUtil().setSp(32),
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ),
+                ),
+              ),
+              Positioned(
+                top: ScreenUtil().setWidth(180),
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Text(
+                    "健康码状态：${widget.result == '0' ? '健康' : '异常'}",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: _globalColor,
+                        fontSize: ScreenUtil().setSp(32),
+                        fontWeight: FontWeight.w500),
                   ),
-                  Positioned(
-                    bottom: 90,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Text('更新于',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: _globalColor,
-                                  fontSize: ScreenUtil().setSp(28),
-                                  fontWeight: FontWeight.w400)),
-                          VEmptyView(5),
-                          Text(
-                              _upTime,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: _globalColor,
-                                  fontSize: ScreenUtil().setSp(28),
-                                  fontWeight: FontWeight.w400))
-                        ],
-                      ),
-                    ),
-                  )
-                ],
-              )),
+                ),
+              ),
+              Positioned(
+                bottom: 90,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text('更新于',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: _globalColor,
+                              fontSize: ScreenUtil().setSp(28),
+                              fontWeight: FontWeight.w400)),
+                      VEmptyView(5),
+                      Text(_upTime,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: _globalColor,
+                              fontSize: ScreenUtil().setSp(28),
+                              fontWeight: FontWeight.w400))
+                    ],
+                  ),
+                ),
+              )
+            ],
+          )),
           Container(
             padding: EdgeInsets.only(bottom: 25, top: 40),
             alignment: Alignment.center,
