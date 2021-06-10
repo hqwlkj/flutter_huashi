@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:collection';
+import 'package:device_info/device_info.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -19,6 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   StreamSubscription<Map> _flutterHuashi;
 
   // 音频播放
@@ -28,7 +31,6 @@ class _HomePageState extends State<HomePage> {
   String _title = '';
   String _subtitle = '';
   List<Map<String, dynamic>> _currentBtn = [];
-  int _count = 0;
 
   @override
   void initState() {
@@ -204,53 +206,57 @@ class _HomePageState extends State<HomePage> {
   ///
   /// 根据信息进行健康认证
   ///
-  Future<void> checkHealth(BuildContext context, String type, String code,
-      {String json, String username}) async {
+  Future<void> checkHealth(BuildContext context, String type, String code, {String json, String username}) async {
     Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 12);
+    Map<String, dynamic> params = new HashMap();
+    params['scanType'] = type;
     if (type == 'card' || type == 'face') {
       Response response = await HomeService.checkHealthByCardNo(context, params: {"cardNo": code});
       LogUtil.e(response.data, tag: 'response');
       Loading.hideLoading(context);
+      params['idCardNo'] = code;
+      params['name'] = username;
+      params['result'] = response.data['data'];
+      params['requestResult'] = response.toString();
+      await _sendDeviceUsageRecords(context, params);
       if (response.data['data'].toString() == '2') {
         Utils.showToast('渝康码识别失败，请稍后重试...');
       } else {
-        Navigator.push(
-            context,
-            new MaterialPageRoute(
-                builder: (context) => new ResultPage(
-                    type: _type,
-                    username: username,
-                    result: response.data['data'].toString()))).then((value) {
+        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: type, username: username, result: response.data['data'].toString()))).then((value) {
           if (type == 'card') {
             readCardInfo(context);
           } else {
             audioCache.play('audios/face-repeat.mp3'); // 播报音频
             setState(() {
-              // _currentBg = 'images/v3/face-repeat-bg.png';
               _subtitle = '点击屏幕开始人脸识别';
             });
           }
         });
       }
-    } else {
+    } else { // 扫码
       Response response = await HomeService.checkHealthByCodeId(context, params: {"codeId": code});
       Response nameResponse = await HomeService.queryNameByQrcode(context, params: {"qrcode": json});
-      _count += 1;
+      params['result'] = response.data['result'];
+      params['name'] = nameResponse.data['name'] ?? '';
+      params['requestResult'] = response.toString();
+      params['scanResult'] = json;
       Loading.hideLoading(context);
+      await _sendDeviceUsageRecords(context, params);
       if (response.data['result'].toString() == '2') {
         Utils.showToast('渝康码识别失败，请稍后重试...');
       } else {
-        Navigator.push(
-            context,
-            new MaterialPageRoute(
-                builder: (context) => new ResultPage(
-                    type: _type,
-                    username: nameResponse.data['name'] ?? '',
-                    result: response.data['result'].toString()))).then((value) {
+        Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: type, username: nameResponse.data['name'] ?? '', result: response.data['result'].toString()))).then((value) {
           scanCodeInfo(context);
         });
       }
     }
+  }
+
+  Future<void> _sendDeviceUsageRecords(BuildContext context, Map<String, dynamic> params) async{
+    AndroidDeviceInfo build = await deviceInfoPlugin.androidInfo;
+    params['deviceId'] = build.brand+'-'+build.device+'-'+ build.androidId;
+    Response response = await HomeService.sendDeviceUsageRecords(context, params: params);
+    LogUtil.e(response, tag:'_sendDeviceUsageRecords');
   }
 
   @override
@@ -258,7 +264,12 @@ class _HomePageState extends State<HomePage> {
     NetUtils.init();
     return Scaffold(
       appBar: AppBar(
-        title: Text(_title),
+        title: InkWell(
+          onLongPress: (){
+            Navigator.pushNamed(context, '/device');
+          },
+          child: Text(_title),
+        ),
         backgroundColor: Color(0xff2762D9),
         elevation: 0,
       ),

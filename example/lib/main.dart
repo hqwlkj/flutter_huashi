@@ -1,28 +1,19 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'pages/home_page_v6.dart';
 import 'pages/result_page.dart';
 
-import 'pages/home_page_v6.dart';
+import 'pages/device_page.dart';
 
 void main() {
-  if (Platform.isAndroid) {
-    SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-
-        /// 在Android环境下将状态栏的颜色设置我为透明
-        // statusBarColor: Colors.amber,  /// 设置状态栏颜色，只在Android的M版本以上生效
-        statusBarBrightness: Brightness.light,
-
-        /// 状态栏亮度，只在IOS生效，只有light和dart模式
-        statusBarIconBrightness: Brightness.light
-
-        /// 状态栏Icon亮度，只在Android的M版本以上生效，只有light和dart模式，和AppBar的brightness相反
-        );
-    SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-  }
-  runApp(MyApp());
+  runZonedGuarded(() {
+    runApp(MyApp());
+  }, (dynamic error, dynamic stack) {
+    print(error);
+    print(stack);
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -45,7 +36,8 @@ class _MyAppState extends State<MyApp> {
       home: new HomePage(),
       routes: <String, WidgetBuilder>{
         '/home': (BuildContext context) => HomePage(),
-        '/result': (BuildContext context) => ResultPage()
+        '/result': (BuildContext context) => ResultPage(),
+        '/device': (BuildContext context) => DevicePage()
       },
     );
   }

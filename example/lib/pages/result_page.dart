@@ -54,6 +54,7 @@ class _ResultPageState extends State<ResultPage> {
       if (seconds == 0) {
         ///倒计时秒数为0，取消定时器
         _cancelTimer();
+        LogUtil.e('=========_startTimer===========');
         Navigator.pop(context);
       }
     });
@@ -97,7 +98,7 @@ class _ResultPageState extends State<ResultPage> {
             FlatButton(
               onPressed: (){
                 if(seconds > 0){
-                  // Navigator.pop(context);
+                  Navigator.pop(context);
                   // _cancelTimer();
                 } else {
                   LogUtil.e('====================');
