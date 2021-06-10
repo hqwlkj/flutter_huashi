@@ -22,6 +22,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
+import kotlin.properties.Delegates
 
 
 /** FlutterHuashiPlugin */
@@ -38,6 +39,12 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private var responseHandler: HuaShiHandler? = null
+    /*
+    插件相关参数
+    */
+    private var disableAudio by Delegates.notNull<Boolean>() //是否禁用音频 默认为开启
+    private var scanType by Delegates.notNull<String>() //扫码类型，默认为扫码，可选参数为：payCode, qrCode
+
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "flutter_huashi")
@@ -72,9 +79,13 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
                 result.success("Android ${android.os.Build.VERSION.RELEASE}")
             }
             "openCardInfo" -> {
+                disableAudio = call.argument<Boolean>("disableAudio")!!
                 openCard(result)
             }
             "openScanCode" -> {
+                disableAudio = call.argument<Boolean>("disableAudio")!!
+                scanType = call.argument<String>("scanType")!!
+                Log.e("scanType", scanType.toString())
                 openScanCode(result)
             }
             "stopScanCode" -> {
@@ -91,9 +102,14 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
 
 
     private fun openCard(@NonNull result: Result) {
+        if(!disableAudio){
+            PlayerUtil.readPlay(HuaShiHandler.getContext())
+        }
         Function.doReadIDCard(HuaShiHandler.getContext(), object : IDCardReadCallBack {
             override fun success(ic: HSIDCardInfo?) {
-                PlayerUtil.play(HuaShiHandler.getContext())
+                if(!disableAudio) {
+                    PlayerUtil.play(HuaShiHandler.getContext())
+                }
                 uiThreadHandler.post {
                     val params: MutableMap<String, Any> = HashMap()
                     params["data"] = FastJsonUtil.toJson(ic)
@@ -120,9 +136,18 @@ public class FlutterHuashiPlugin : FlutterPlugin, MethodCallHandler, ActivityAwa
     }
 
     private fun openScanCode(@NonNull result: Result) {
+        if(!disableAudio){
+            if(scanType == "PAYCODE"){
+                PlayerUtil.scanPayCodePlay(HuaShiHandler.getContext())
+            }else{
+                PlayerUtil.scanCodePlay(HuaShiHandler.getContext())
+            }
+        }
         Function.doScanLoop(object : ScanCallBack {
             override fun success(data: String?) {
-                PlayerUtil.play(HuaShiHandler.getContext())
+                if(!disableAudio) {
+                    PlayerUtil.play(HuaShiHandler.getContext())
+                }
                 Function.stopScan() // 停止扫码
                 uiThreadHandler.post {
                     val params: MutableMap<String, Any> = HashMap()
