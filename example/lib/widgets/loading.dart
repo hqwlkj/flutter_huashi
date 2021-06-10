@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_huashi_example/widgets/v_empty_view.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 /// 加载组件
@@ -22,8 +23,8 @@ class Loading {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  width: 100,
-                  height: 100,
+                  width: ScreenUtil().setWidth(200),
+                  height: ScreenUtil().setWidth(200),
                   color: Colors.black54,
                   child: text != null ? Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -31,14 +32,14 @@ class Loading {
                     children: [
                       SpinKitCircle(
                         color: Colors.white,
-                        size: 40,
+                        size: ScreenUtil().setWidth(100),
                       ),
                       VEmptyView(15),
-                      Text(text, style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: FontWeight.w200, decoration: TextDecoration.none ),)
+                      Text(text, style: TextStyle(color: Colors.white, fontSize: ScreenUtil().setSp(fontSize), fontWeight: FontWeight.w200, decoration: TextDecoration.none ),)
                     ],
                   ) :SpinKitCircle(
                       color: Colors.white,
-                      size: 40
+                      size: ScreenUtil().setWidth(100)
                   ),
                 ),
               ),

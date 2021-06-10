@@ -97,7 +97,7 @@ class _ResultPageState extends State<ResultPage> {
           actions: [
             TextButton(
               onPressed: (){
-                Navigator.pop(context);
+                // Navigator.pop(context);
               },
               child: Container(
                   alignment: Alignment.center,
@@ -126,57 +126,66 @@ class _ResultPageState extends State<ResultPage> {
                       widget.result == '0'
                           ? 'images/success.png'
                           : 'images/error.png',
-                      width: ScreenUtil().setWidth(120.0),
+                      width: ScreenUtil().setWidth(240.0),
                     ),
                   ),
                   Positioned(
-                    top: 65,
-                    left: 165,
-                    child: Text(
-                      TextUtil.hideNumber(_username,
-                          start: _username.length >= 3 ? 1 : 0,
-                          end: _username.length - 1,
-                          replacement: "*" * (_username.length >= 3 ? 1 : 2)),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: _globalColor,
-                          fontSize: ScreenUtil().setSp(28),
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 3),
+                    top: ScreenUtil().setWidth(100),
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Text(
+                        TextUtil.hideNumber(_username,
+                            start: _username.length >= 3 ? 1 : 0,
+                            end: _username.length - 1,
+                            replacement: "*" * (_username.length >= 3 ? 1 : 2)),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: _globalColor,
+                            fontSize: ScreenUtil().setSp(48),
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 3),
+                      ),
                     ),
                   ),
                   Positioned(
-                    top: 120,
-                    left: 120,
-                    child: Text(
-                      "健康码状态：${widget.result == '0' ? '健康' : '异常'}",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: _globalColor,
-                          fontSize: ScreenUtil().setSp(24),
-                          fontWeight: FontWeight.w500),
+                    top: ScreenUtil().setWidth(180),
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Text(
+                        "健康码状态：${widget.result == '0' ? '健康' : '异常'}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: _globalColor,
+                            fontSize: ScreenUtil().setSp(32),
+                            fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ),
                   Positioned(
                     bottom: 90,
-                    left: 125,
-                    child: Column(
-                      children: [
-                        Text('更新于',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: _globalColor,
-                                fontSize: ScreenUtil().setSp(18),
-                                fontWeight: FontWeight.w400)),
-                        VEmptyView(5),
-                        Text(
-                            _upTime,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: _globalColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400))
-                      ],
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Text('更新于',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: _globalColor,
+                                  fontSize: ScreenUtil().setSp(28),
+                                  fontWeight: FontWeight.w400)),
+                          VEmptyView(5),
+                          Text(
+                              _upTime,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: _globalColor,
+                                  fontSize: ScreenUtil().setSp(28),
+                                  fontWeight: FontWeight.w400))
+                        ],
+                      ),
                     ),
                   )
                 ],
@@ -186,7 +195,7 @@ class _ResultPageState extends State<ResultPage> {
             alignment: Alignment.center,
             child: Image.asset(
               'images/home-footer.png',
-              width: 140.0,
+              width: ScreenUtil().setWidth(240.0),
             ),
           )
         ],

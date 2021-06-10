@@ -6,6 +6,8 @@ import 'package:common_utils/common_utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chs/flutter_chs.dart';
+import 'package:flutter_huashi_example/widgets/v_empty_view.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wechat_face_payment/wechat_face_payment.dart';
 import 'package:flutter_huashi_example/services/home_service.dart';
 import 'package:flutter_huashi_example/utils/net_utils.dart';
@@ -33,11 +35,14 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _type = 'card';
+    _type = 'multi'; // 多
     _title = '识别身份证'; // 识别身份证 & 识别二维码
     _subtitle = '请将手机渝康码放置感应区';
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    _currentBg = 'images/$_uiVersion/read-card-bg.png';
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       LogUtil.e('addPostFrameCallback', tag: 'addPostFrameCallback');
+      WechatFacePayment result = await WechatFacePayment.initFacePay("wx34aa1d8ffa545b06", "1506994921", "123455", "https://parsec.cqkqinfo.com/app/stage-exhibition-api/face");
+      LogUtil.e(result, tag: 'initWxFace =>  result:');
       multiFunctionCertification(context);
     });
   }
@@ -82,9 +87,11 @@ class _HomePageState extends State<HomePage> {
       if(data['type'] == 'HEALTHCARD'){
         checkHealth(context, data['type'], data['idCardNo'], username: data['name']);
       }
-    }else{
-      Utils.showToast(result['message'] ?? '识别失败，请稍后重试...');
-      multiFunctionCertification(context);
+    } else {
+      if(_type == 'multi'){
+        Utils.showToast(result['message'] ?? '识别失败，请稍后重试...');
+        multiFunctionCertification(context);
+      }
     }
   }
 
@@ -92,7 +99,7 @@ class _HomePageState extends State<HomePage> {
   /// 按钮切换 功能
   ///
   void handleSwitch(BuildContext context, String type) async {
-    Loading.showLoading(context, text: '初始化中...');
+    Loading.showLoading(context, text: '初始化中...', fontSize: 22);
     if(type == 'face'){
       setState(() {
         _type = 'face';
@@ -103,7 +110,7 @@ class _HomePageState extends State<HomePage> {
       faceInfo(context);
     } else {
       setState(() {
-        _type = 'card';
+        _type = 'multi';
         _currentBg = 'images/$_uiVersion/read-card-bg.png';
         _title = '识别身份证'; // 识别身份证 & 识别二维码
       });
@@ -119,20 +126,16 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> faceInfo(BuildContext context) async {
     await audioCache.play('audios/face.mp3'); // 播报音频
-    await FlutterChs.closeDevice; // 先停止多功能功能
-    WechatFacePayment result = await WechatFacePayment.initFacePay("wx34aa1d8ffa545b06", "1506994921", "123455", "http://parsec.cqkqinfo.com/app/stage-exhibition-api/face");
-    LogUtil.e(result, tag: 'initWxFace =>  result:');
+    // await FlutterChs.closeDevice; // 先停止多功能功能
+    LogUtil.e('===============================================', tag: 'initWxFace =>  result:');
     Loading.hideLoading(context);
     Map<String, dynamic> result2 = await WechatFacePayment.wxFaceVerify();
-    Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 12);
+    Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 22);
     if (result2['code'] == 'SUCCESS') {
-      Map<String, dynamic> resultMap =
-          JsonUtil.getObject(result2['data'], (v) => Map.of(v));
-      Response authUser =
-          await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
+      Map<String, dynamic> resultMap = JsonUtil.getObject(result2['data'], (v) => Map.of(v));
+      Response authUser = await HomeService.getAuthUserInfo(context, resultMap['face_sid']);
       if (authUser.statusCode == 200) {
-        checkHealth(context, 'face', authUser.data['credential_no'],
-            username: authUser.data['real_name']);
+        checkHealth(context, 'face', authUser.data['credential_id'], username: authUser.data['real_name']);
       }
     } else {
       Loading.hideLoading(context);
@@ -148,10 +151,9 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> checkHealth(BuildContext context, String type, String code,
       {String json, String username}) async {
-    Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 12);
+    Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 22);
     if (type == 'IDCARD' || type == 'HEALTHCARD' || type == 'face') {
-      HomeService.checkHealthByCardNo(context, params: {"cardNo": code})
-          .then((response) {
+      HomeService.checkHealthByCardNo(context, params: {"cardNo": code}).then((response) {
         Loading.hideLoading(context);
         LogUtil.e(response, tag: '我是返回的：response=>');
         if (response == null || response?.statusCode != 200 || response?.data['data'].toString() == '2') {
@@ -234,84 +236,100 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           title: Text(_title),
           backgroundColor: Color(0xff2762D9),
-          elevation: 0,
-          actions: [
-            TextButton(onPressed: (){
-              handleSwitch(context, 'face');
-            }, child: Text('面部签到'))
-          ],
+          elevation: 0
         ),
         body: Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: ScreenUtil().setWidth(20)),
           child: Stack(
             children: [
               Positioned(
-                top: 50.0,
-                left: MediaQuery.of(context).size.width / 2 - 155,
-                child: Text(
-                  _subtitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Color(0xff2762D9),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22),
-                ),
-              ),
-              Positioned(
-                top: 100.0,
+                top: ScreenUtil().setWidth(50),
                 left: 0,
                 right: 0,
-                child: Container(
-                  width: double.infinity,
-                  child: Image.asset(_currentBg, width: 650, fit: BoxFit.cover),
+                child: Center(
+                  child: Text(
+                    _subtitle,
+                    style: TextStyle(
+                        color: Color(0xff2762D9),
+                        fontWeight: FontWeight.bold,
+                        fontSize: ScreenUtil().setSp(46)),
+                  ),
                 ),
               ),
               Positioned(
-                top: 120.0,
-                left: MediaQuery.of(context).size.width / 2 - 108,
-                child: Column(
-                  children: [
-                    Text(
-                      _type == 'card' ?'将身份证放置感应区域' : '将手机渝康码放置感应区域',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Color(0xffFFB879),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15),
-                    ),
-                    Text(
-                      _type == 'card' ? '即可生成、查看渝康码信息' : '即可生成、查看渝康码信息',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Color(0xffFFB879),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15),
-                    )
-                  ],
+                left: 0,
+                right: 0,
+                top: ScreenUtil().setWidth(105),
+                child: InkWell(
+                  onTap: () {
+                    if (_type == 'face') {
+                      Loading.showLoading(context, text: '初始化中...', fontSize: 22);
+                      faceInfo(context);
+                    }
+                  },
+                  child: Image.asset(_currentBg, width:  ScreenUtil().setWidth(650), fit: BoxFit.cover),
                 ),
               ),
               Positioned(
-                left: 25,
-                right: 25,
-                bottom: 70,
+                top: ScreenUtil().setWidth(160),
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        _type == 'multi' ?'请将身份证、社保卡、渝康码放置对应感应区' : '请面向屏幕开始人脸认证',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Color(0xffFFB879),
+                            fontWeight: FontWeight.bold,
+                            fontSize: ScreenUtil().setSp(26)),
+                      ),
+                      VEmptyView(20),
+                      Text(
+                        _type == 'multi' ? '即可生成、查看渝康码信息' : '即可生成、查看渝康码信息',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Color(0xffFFB879),
+                            fontWeight: FontWeight.bold,
+                            fontSize: ScreenUtil().setSp(26)),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: ScreenUtil().setWidth(25),
+                right: ScreenUtil().setWidth(25),
+                bottom: ScreenUtil().setWidth(120),
                 child: Container(
                   width: double.infinity,
-                  height: 58,
+                  height: ScreenUtil().setWidth(88),
                   child: _getButton(context),
                 ),
               ),
               Positioned(
-                  left: MediaQuery.of(context).size.width / 2 - 75,
-                  bottom: 15.0,
-                  child: Image.asset('images/v5/footer-logo.png', width: 100.0, fit: BoxFit.cover))
+                  left: 0,
+                  right: 0,
+                  bottom: ScreenUtil().setWidth(45),
+                  child: Center(
+                    child: Image.asset('images/v5/footer-logo.png', width: ScreenUtil().setWidth(140), fit: BoxFit.cover),
+                  )),
+              Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: ScreenUtil().setWidth(15),
+                  child: Center(
+                    child: Text('023-63066080', style: TextStyle(fontSize: ScreenUtil().setSp(22), color: Color(0xffB7D6F5))),
+                  ))
             ],
           ),
         ));
   }
 
   Widget _getButton(BuildContext context){
-    if (_type == 'card') {
+    if (_type == 'multi') {
       return TextButton(
         onPressed: () {
           handleSwitch(context, 'face');
@@ -324,7 +342,7 @@ class _HomePageState extends State<HomePage> {
           return Color(0xff2762DA);
         })),
         child: Text('面部签到',style: TextStyle(
-            fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold
+            fontSize: ScreenUtil().setSp(32), color: Colors.white, fontWeight: FontWeight.bold
         )),
       );
     } else {
@@ -337,10 +355,10 @@ class _HomePageState extends State<HomePage> {
           return Color(0xff2762DA);
         })),
         onPressed: () {
-          handleSwitch(context, 'card');
+          handleSwitch(context, 'multi');
         },
         child: Text('多功能签到', style: TextStyle(
-            fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold
+            fontSize: ScreenUtil().setSp(32), color: Colors.white, fontWeight: FontWeight.bold
         )),
       );
     }

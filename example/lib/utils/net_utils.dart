@@ -13,8 +13,8 @@ class NetUtils {
 
   ///  服务器请求地址
 //  static final String mockUrl = 'http://yapi.parsec.com.cn/mock/448';
-//  static final String debugBaseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
-//  static final String baseUrl = 'http://parsec.cqkqinfo.com/app/ykm-demo-api';
+//  static final String debugBaseUrl = 'https://parsec.cqkqinfo.com/app/ykm-demo-api';
+//  static final String baseUrl = 'https://parsec.cqkqinfo.com/app/ykm-demo-api';
     static final String debugBaseUrl = 'https://h5b.parsec.com.cn/app/ykm-demo-api';
   static final String baseUrl = 'https://h5b.parsec.com.cn/app/ykm-demo-api';
   static const int CONNECT_TIMEOUT = 1000 * 8;
