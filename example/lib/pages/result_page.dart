@@ -136,11 +136,13 @@ class _ResultPageState extends State<ResultPage> {
                   Positioned(
                     top: 65,
                     left: 165,
-                    child: Text(
-                      TextUtil.hideNumber(_username,
-                          start: _username.length >= 3 ? 1 : 0,
-                          end: _username.length - 1,
-                          replacement: "*" * (_username.length >= 3 ? 1 : 2)),
+                    child: Text(widget.type == 'scan'
+                        ? _username
+                        : TextUtil.hideNumber(_username,
+                        start: _username.length >= 3 ? 1 : 0,
+                        end: _username.length - 1,
+                        replacement: "*" * (_username.length >= 3 ? 1 : 2)),
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           color: _globalColor,
                           fontSize: 28,
