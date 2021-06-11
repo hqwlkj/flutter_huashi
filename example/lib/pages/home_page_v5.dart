@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:common_utils/common_utils.dart';
+import 'package:device_info/device_info.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chs/flutter_chs.dart';
@@ -22,6 +24,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
 
   // 音频播放
   AudioCache audioCache = AudioCache(prefix: '', fixedPlayer: AudioPlayer());
@@ -41,8 +44,6 @@ class _HomePageState extends State<HomePage> {
     _currentBg = 'images/$_uiVersion/read-card-bg.png';
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       LogUtil.e('addPostFrameCallback', tag: 'addPostFrameCallback');
-      WechatFacePayment result = await WechatFacePayment.initFacePay("wx34aa1d8ffa545b06", "1506994921", "123455", "https://parsec.cqkqinfo.com/app/stage-exhibition-api/face");
-      LogUtil.e(result, tag: 'initWxFace =>  result:');
       multiFunctionCertification(context);
     });
   }
@@ -126,8 +127,10 @@ class _HomePageState extends State<HomePage> {
   ///
   Future<void> faceInfo(BuildContext context) async {
     await audioCache.play('audios/face.mp3'); // 播报音频
-    // await FlutterChs.closeDevice; // 先停止多功能功能
+    WechatFacePayment result = await WechatFacePayment.initFacePay("wx34aa1d8ffa545b06", "1506994921", "123455", "https://parsec.cqkqinfo.com/app/stage-exhibition-api/face");
+    LogUtil.e(result, tag: 'initWxFace =>  result:');
     LogUtil.e('===============================================', tag: 'initWxFace =>  result:');
+    // await FlutterChs.closeDevice; // 先停止多功能功能
     Loading.hideLoading(context);
     Map<String, dynamic> result2 = await WechatFacePayment.wxFaceVerify();
     Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 22);
@@ -152,10 +155,17 @@ class _HomePageState extends State<HomePage> {
   Future<void> checkHealth(BuildContext context, String type, String code,
       {String json, String username}) async {
     Loading.showLoading(context, text: '认证中,请稍候...', fontSize: 22);
+    Map<String, dynamic> params = new HashMap();
+    params['scanType'] = type;
     if (type == 'IDCARD' || type == 'HEALTHCARD' || type == 'face') {
-      HomeService.checkHealthByCardNo(context, params: {"cardNo": code}).then((response) {
+      HomeService.checkHealthByCardNo(context, params: {"cardNo": code}).then((response) async {
         Loading.hideLoading(context);
         LogUtil.e(response, tag: '我是返回的：response=>');
+        params['idCardNo'] = code;
+        params['name'] = username;
+        params['result'] = response?.data['data'];
+        params['requestResult'] = response.toString();
+        await _sendDeviceUsageRecords(context, params);
         if (response == null || response?.statusCode != 200 || response?.data['data'].toString() == '2') {
           if (type == 'IDCARD' || type == 'HEALTHCARD') {
             Utils.showToast(type == 'IDCARD' ? '身份证认证失败，请稍后重试...' : '社保卡认证失败，请稍后重试...');
@@ -169,7 +179,7 @@ class _HomePageState extends State<HomePage> {
           }
         } else {
           if (response?.data['errcode'] == 0) {
-            Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: _type, username: username, result: response.data['data'].toString()))).then((value) {
+            Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: type, username: username, result: response.data['data'].toString()))).then((value) {
               if (type == 'face') {
                 audioCache.play('audios/face-repeat.mp3'); // 播报音频
                 setState(() {
@@ -211,11 +221,16 @@ class _HomePageState extends State<HomePage> {
         Response nameResponse = await HomeService.queryNameByQrcode(context, params: {"qrcode": json});
         LogUtil.e(nameResponse?.statusCode, tag: 'nameResponse');
         Loading.hideLoading(context);
+        params['result'] = response.data['result'];
+        params['name'] = nameResponse.data['name'] ?? '';
+        params['requestResult'] = response.toString();
+        params['scanResult'] = json;
+        await _sendDeviceUsageRecords(context, params);
         if (response == null || response?.statusCode != 200 || response?.data['result'].toString() == '2' || nameResponse?.statusCode != 200) {
           Utils.showToast('渝康码识别失败，请稍后重试...');
           multiFunctionCertification(context);
         } else {
-          Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: _type, username: nameResponse.data['name'] ?? '', result: response.data['result'].toString()))).then((value) {
+          Navigator.push(context, new MaterialPageRoute(builder: (context) => new ResultPage(type: type, username: nameResponse.data['name'] ?? '', result: response.data['result'].toString()))).then((value) {
             multiFunctionCertification(context);
           });
         }
@@ -227,14 +242,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _sendDeviceUsageRecords(BuildContext context, Map<String, dynamic> params) async{
+    AndroidDeviceInfo build = await deviceInfoPlugin.androidInfo;
+    params['deviceId'] = build.brand+'-'+build.device+'-'+ build.androidId;
+    Response response = await HomeService.sendDeviceUsageRecords(context, params: params);
+    LogUtil.e(response, tag:'_sendDeviceUsageRecords');
+  }
+
   @override
   Widget build(BuildContext context) {
     NetUtils.init();
-    print(MediaQuery.of(context).size.width);
-    print(MediaQuery.of(context).size.height);
     return Scaffold(
         appBar: AppBar(
-          title: Text(_title),
+          title: InkWell(
+            onLongPress: (){
+              Navigator.pushNamed(context, '/device');
+            },
+            child: Text(_title),
+          ),
           backgroundColor: Color(0xff2762D9),
           elevation: 0
         ),

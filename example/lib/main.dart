@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'pages/result_page.dart';
+import 'pages/device_page.dart';
 
 import 'pages/home_page_v5.dart';
 
@@ -41,7 +42,8 @@ class _MyAppState extends State<MyApp> {
               home: new HomePage(),
               routes: <String, WidgetBuilder>{
                 '/home': (BuildContext context) => HomePage(),
-                '/result': (BuildContext context) => ResultPage()
+                '/result': (BuildContext context) => ResultPage(),
+                '/device': (BuildContext context) => DevicePage()
               },
             ));
   }

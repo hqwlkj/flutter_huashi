@@ -36,4 +36,9 @@ class HomeService {
   static Future<Response> getAuthUserInfo(BuildContext context,String faceSid) async {
     return await NetUtils.get(context, "https://parsec.cqkqinfo.com/app/stage-exhibition-api/face/wx/certification?face_sid=$faceSid");
   }
+  
+  /// 记录设备使用记录
+  static Future<Response> sendDeviceUsageRecords(BuildContext context, {@required Map<String, dynamic> params}) async{
+    return await NetUtils.post(context, '/device-usage-records',data: params, isShowLoading: false);
+  }
 }
